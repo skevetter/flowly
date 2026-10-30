@@ -251,13 +251,15 @@ export function featureSettingsValues(values: unknown): FeatureSettings {
   return parsed.success ? parsed.data : featureSettings.schema.parse({});
 }
 
-/** Anonymous daily usage data (TELEMETRY-SPEC §5): on unless the user turns it off. Host-scoped. */
+/** Anonymous daily usage data (TELEMETRY-SPEC §5): off until the user turns it on and sets a key and endpoint. Host-scoped. */
 export const telemetrySettings = defineSettings({
   id: "telemetry",
   scope: "host",
   version: 1,
   schema: z.object({
-    enabled: z.boolean().default(true),
+    enabled: z.boolean().default(false),
+    apiKey: z.string().default(""),
+    endpoint: z.string().default(""),
   }),
 });
 export type TelemetrySettings = z.infer<typeof telemetrySettings.schema>;
