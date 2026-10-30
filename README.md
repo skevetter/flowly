@@ -138,7 +138,7 @@ Flowly does not read the Paseo daemon credential (`~/.paseo/local-credential`) a
 - Restoring an archived workspace and unarchiving its sessions when a card leaves Done or Cancelled. The reopen records a skipped restore with the reason; restore the workspace in Paseo.
 - Clearing a session's native Paseo unread flag. Mark as read stays in Flowly.
 - Hard-deleting temporary summary, insight and memory-review sessions. They are archived instead.
-- Reusing the background workspace after it was archived. Flowly creates a new one.
+- Reusing the background workspace after it was archived. Each run creates a new one and archives it when the last run in the project ends, so the live workspace list does not grow; one archived record per run stays in Paseo. A workspace whose archive failed is archived again before the next run.
 - The Paseo version in error reports. `paseo_version` is empty.
 
 ### Model calls, cost and privacy

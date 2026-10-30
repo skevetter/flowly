@@ -17,6 +17,7 @@ The memory review, the Insights digest and workflow insights each create a tempo
   - not archived: reuse it as it is;
   - unavailable (removed), or the daemon cannot be reached: create a new one and store its id. The old one is left alone.
 - **After a run**: when the last run in the project ends, successful or not, the workspace is archived (`paseo.workspaces.archive`). Archiving clears its sidebar entry and tabs. An archive failure is logged and does not fail the run.
+- **Failed archive**: the id is kept in `unarchived` in `background-workspaces.json`, and the next run in any project archives it again before opening its own; the entry is removed once the archive succeeds. A result with an `error` counts as a failed archive.
 - **Overlap**: runs in the same project share the open workspace. A per-project counter makes sure it is archived only after the last one ends; opening and closing are serialized per project.
 - Each run hard-deletes its own session when done (`server/summarizer-remove.ts`; archived if the delete fails): the memory review, and since 2026-10-23 also the digest and workflow insights.
 - The card summarizer and session insights are unchanged: they run as child sessions in the card's own workspace.
