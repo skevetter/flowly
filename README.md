@@ -131,6 +131,14 @@ Summary models are an ordered fallback list in Settings → Models: add models a
 
 Board data is stored on the daemon machine in `~/.paseo/plugin-data/flowly/` (`PASEO_HOME` selects the daemon home): in a local SQLite database, `flowly.sqlite`, where Paseo supports it, otherwise in `board.json`. *Settings → Storage* shows where it is, keeps a daily backup (the last 7), restores one, and exports the board to JSON. Writes are serialized and atomic, stale edits are rejected, and invalid files are preserved rather than reset. Removing or permanently deleting a project or card writes a backup to `removed/` first. Archiving plugin records never deletes Paseo resources or directories. The tool service listens on loopback with private per-session credentials.
 
+### Connector tokens
+
+Tokens for Jira, Confluence, GitHub, GitLab and Azure DevOps are stored as plaintext JSON in `connectors/connections.json` under the data directory, with file mode `0600` (owner read and write only). They are not encrypted and never reach clients.
+
+- Use scoped, read-only tokens. Flowly only reads, so a token needs no write permission.
+- Use a separate `FLOWLY_DATA_DIR` for each host, so a token is stored only on the machine that uses it.
+- Isolation between projects is not a security boundary. All projects share one connection store, and any project can use any connection.
+
 ### Calls Flowly does not make
 
 Flowly does not read the Paseo daemon credential (`~/.paseo/local-credential`) and opens no second daemon connection. The plugin SDK lacks these calls, so they are unavailable:

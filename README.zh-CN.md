@@ -129,6 +129,14 @@ Insights 用 GitHub 式的热力图显示项目一年的活跃度：每天一格
 
 看板数据存放在 daemon 所在机器的 `~/.paseo/plugin-data/flowly/`（`PASEO_HOME` 可指定 daemon 主目录）：Paseo 支持时存在本地 SQLite 数据库 `flowly.sqlite` 里，否则存在 `board.json`。*Settings → Storage* 显示存放位置，每天备份一次（保留最近 7 份），可恢复备份或把看板导出为 JSON。写入串行化并原子替换，过期编辑会被拒绝，无效文件会被保留而不是重置。移除或永久删除 project / 卡片前会先备份到 `removed/`。归档插件记录不会删除 Paseo 资源或磁盘目录。工具服务只监听本机回环地址，每个 session 使用独立的私有凭据。
 
+### 连接器令牌
+
+Jira、Confluence、GitHub、GitLab 和 Azure DevOps 的令牌以明文 JSON 存放在数据目录下的 `connectors/connections.json`，文件权限为 `0600`（仅所有者可读写）。令牌未加密，也不会发送给客户端。
+
+- 使用限定范围的只读令牌。Flowly 只读取，令牌不需要写权限。
+- 每台主机使用单独的 `FLOWLY_DATA_DIR`，令牌只保存在使用它的机器上。
+- project 之间的隔离不是安全边界。所有 project 共用一个连接存储，任何 project 都可以使用任何连接。
+
 ### Flowly 不发起的调用
 
 Flowly 不读取 Paseo daemon 凭据（`~/.paseo/local-credential`），也不另开 daemon 连接。插件 SDK 没有下列调用，所以这些功能不可用：
