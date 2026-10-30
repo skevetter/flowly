@@ -24,6 +24,7 @@ import {
 import { sessionSummaryRow } from "../shared/native-session";
 import { within } from "./summaries";
 import { runSummaryModels } from "./summary-models";
+import { modelCallsDenied, type ModelCallClaim } from "./model-calls";
 import type { NextMoveRows } from "./next-move-rows";
 import { generatedBranchName, resolveWorktreeBaseRef } from "./service";
 import { logFailure } from "./error-report";
@@ -79,7 +80,7 @@ export class SessionInsightStore {
 
 /** The session the hook names, as far as insights need it. */
 export type OutsideAgent = { id: string; workspaceId: string | null; parentAgentId: string | null; title: string | null; cwd: string; labels?: Readonly<Record<string, string>> | null };
-export type InsightSettings = { enabled: boolean; parts: InsightParts; model: SummaryModelChoice };
+export type InsightSettings = { enabled: boolean; parts: InsightParts; model: SummaryModelChoice; transcriptLimit: number };
 
 type Batch = { text: string; endedAt: string; agent: OutsideAgent };
 export const INSIGHT_TIMEOUT_MS = 120_000;
@@ -116,6 +117,8 @@ export class SessionInsightService {
     private rowTimeoutMs = ROW_TIMEOUT_MS,
     private remove: RemoveAgent = archiveRemovedAgent,
   ) {}
+
+  claim: ModelCallClaim = modelCallsDenied;
 
   running() {
     return [...this.queues.keys()];
@@ -192,12 +195,13 @@ export class SessionInsightService {
     if (!settings.enabled || !(parts.progress || parts.nextMoves || parts.ideas)) return;
     const { agent } = batch;
     const before = (await this.store.read()).sessions.find((s) => s.agentId === agent.id);
+    await this.claim();
     const open = (before?.ideas ?? []).filter((i) => i.status === "open");
     const language = await this.language();
     // A child of the session in its own workspace, like the card summarizer: no new project or workspace.
     const prompt = insightPrompt({
         title: agent.title || "", cwd: agent.cwd, previous: before?.summary ?? null,
-        transcript: truncateTranscript(batch.text), openIdeas: open.map((i) => i.title),
+        transcript: truncateTranscript(batch.text, settings.transcriptLimit), openIdeas: open.map((i) => i.title),
         openIdeaCount: open.length, parts, language,
     });
     const { model, output } = await runSummaryModels(paseo, settings.model, {

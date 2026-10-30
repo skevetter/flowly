@@ -12,6 +12,8 @@ import type { SummarySettings } from "../shared/summary";
 import type { BoardEvent } from "../shared/model";
 import { insightsViewSchema } from "../shared/workflow-stats";
 import { BackgroundWorkspaces } from "./background-workspace";
+import { modelCallsAllowed, sharingSettings } from "./model-calls-fixture";
+import { ModelCallBlocked } from "./model-calls";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -83,12 +85,13 @@ async function setup() {
       }),
     },
   } as unknown as PaseoApi;
-  let settings: SummarySettings = { summaryEnabled: true, summaryModel: "", digestEnabled: true, retroEnabled: true };
+  let settings: SummarySettings = sharingSettings();
   const digests = new DigestStore(board.directory);
   const git = new GitStats(async () => "");
   const service = new InsightsService(board, flow, git, new SummaryStore(board.directory), digests, async () => settings, async () => "en", 1000, () => NOW, new BackgroundWorkspaces(board.directory, async () => "live"), async (agent) => {
     removed.push(agent.id);
   });
+  service.claim = modelCallsAllowed;
   return {
     root,
     board,
@@ -226,4 +229,20 @@ test("daily digest follows summary model priority and records the successful mod
   expect(x.created.map((a) => a.config?.provider)).toEqual(["claude/claude-sonnet-5-5", "claude/claude-haiku-5-5"]);
   expect(x.removed).toEqual(["digest-1", "digest-2"]);
   expect(x.archived()).toBe(0);
+});
+
+test("a refused model call keeps no stored error and starts no session", async () => {
+  const x = await setup();
+  let refused!: () => void;
+  const claimed = new Promise<void>((resolve) => (refused = resolve));
+  x.service.claim = async () => {
+    refused();
+    throw new ModelCallBlocked("The daily limit of 1 model runs is reached.");
+  };
+  x.service.refresh({ projectId: "p", tz: "UTC", day: "2026-10-15" }, x.paseo);
+  await claimed;
+  await new Promise((r) => setTimeout(r, 50));
+  expect(x.created).toEqual([]);
+  const view = await x.service.digest({ projectId: "p", tz: "UTC", day: "2026-10-15" }, x.paseo);
+  expect(view.error).toBeNull();
 });

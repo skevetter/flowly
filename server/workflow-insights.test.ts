@@ -11,6 +11,8 @@ import { BoardService } from "./service";
 import type { SummarySettings } from "../shared/summary";
 import type { CommandRecord, WorkflowSettings } from "../shared/workflow-insights";
 import { BackgroundWorkspaces } from "./background-workspace";
+import { modelCallsAllowed, sharingSettings } from "./model-calls-fixture";
+import { ModelCallBlocked } from "./model-calls";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -78,13 +80,14 @@ async function setup() {
     },
   } as unknown as PaseoApi;
   let settings: WorkflowSettings = { enabled: true, model: "", intervalDays: 7, runHour: 9, timeZone: "UTC" };
-  const summary: SummarySettings = { summaryEnabled: true, summaryModel: "", digestEnabled: true, retroEnabled: true };
+  let summary: SummarySettings = sharingSettings();
   const log = new CommandLog(board.directory);
   const state = new WorkflowStore(board.directory);
   let now = NOW;
   const service = new WorkflowInsightsService(board, log, state, flow, async () => settings, async () => summary, async () => "en", () => now, 1000, "/home/me", new BackgroundWorkspaces(board.directory, async () => "live"), async (agent) => {
     removed.push(agent.id);
   });
+  service.claim = modelCallsAllowed;
   return {
     root,
     board,
@@ -100,6 +103,7 @@ async function setup() {
     agentLabels,
     archived: () => archived,
     removed,
+    setSharing: (sendTextToModels: boolean) => (summary = { ...summary, sendTextToModels }),
     setSettings: (s: Partial<WorkflowSettings>) => (settings = { ...settings, ...s }),
     setNow: (t: number) => (now = t),
   };
@@ -446,3 +450,27 @@ for (const secondLookupFails of [false, true]) {
     expect(x.archived()).toBe(0);
   });
 }
+
+test("a refused model call records a failed run and starts no session", async () => {
+  const x = await setup();
+  await x.log.append("p", records(6, 3));
+  x.service.claim = async () => {
+    throw new ModelCallBlocked("The daily limit of 1 model runs is reached.");
+  };
+  x.service.run("p", x.paseo, true);
+  await settle(x.service);
+  expect(x.created).toEqual([]);
+  expect((await x.service.view("p")).lastRun).toMatchObject({ status: "error", reason: expect.stringContaining("daily limit") });
+});
+
+test("scheduled runs wait without an error while text sharing is off", async () => {
+  const x = await setup();
+  x.service.attach(x.paseo);
+  await x.log.append("p", records(10, 3));
+  x.setNow(NOW + 8 * 86_400_000);
+  x.setSharing(false);
+  await x.service.tick();
+  await settle(x.service);
+  expect((await x.service.view("p")).lastRun).toBeNull();
+  expect(x.created).toHaveLength(0);
+});

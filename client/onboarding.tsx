@@ -7,7 +7,7 @@ import { nativeSessionSettings, nativeSessionSettingsValues } from "../shared/se
 import { FlowlyMark } from "./brand-icons";
 import { Enter, MotionReveal, motionDuration, useMotionValue } from "./motion";
 import { firstRunOutside, outsidePatch, outsideShown, stepPage, tourKey, welcomePageCount, type OutsideChoice } from "./onboarding-logic";
-import { AiLanguageRow, InsightsFeatureGroup, InterfaceLanguageRow, MemoryFeatureGroup, SummaryModelGroup, UsageDataGroup, aiCostText, summaryModelOf } from "./settings-pages";
+import { AiLanguageRow, AutoSummarySwitch, InsightsFeatureGroup, InterfaceLanguageRow, MemoryFeatureGroup, SummaryModelGroup, TextSharingGroup, UsageDataGroup, aiCostText, summaryModelOf } from "./settings-pages";
 import { summarySettings, summarySettingsValues } from "../shared/summary";
 import { SettingSwitch, SettingsGroup } from "./settings-ui";
 import { useStored } from "./stored-settings";
@@ -119,16 +119,6 @@ function HowPage() {
   );
 }
 
-/** "Always on" in place of a switch: built-in features are tuned in the tour, not turned off (ONBOARDING-SETUP-SPEC D1). */
-function AlwaysOn() {
-  const { colors } = useTheme();
-  return (
-    <View style={{ height: 20, justifyContent: "center", paddingHorizontal: space[1.5], borderRadius: radius.full, backgroundColor: tint(colors.statusSuccess, 0.14) }}>
-      <Label medium size={font.xs} color={colors.statusSuccess} lines={1} selectable={false}>{t("Always on")}</Label>
-    </View>
-  );
-}
-
 /** One built-in feature under the demo: its name and one line. */
 function Legend({ title, text }: { title: string; text: string }) {
   return (
@@ -147,7 +137,7 @@ function BuiltInPage({ active, outside, onOutside }: { active: boolean; outside:
   );
   return (
     <View style={{ gap: space[5] }}>
-      <PageTitle title={t("Built in")} aside={<AlwaysOn />} detail={t("These run on every card. You can tune them here, not turn them off.")} />
+      <PageTitle title={t("Built in")} detail={t("Off until you allow sending text to a model.")} />
       <LoopDemo />
       <Columns>
         {[
@@ -156,7 +146,11 @@ function BuiltInPage({ active, outside, onOutside }: { active: boolean; outside:
           <Legend key="i" title={t("Ideas")} text={t("Follow-ups the agent found, yours to decide.")} />,
         ]}
       </Columns>
+      <TextSharingGroup bare />
       <SummaryModelGroup active={active} bare extra={<AiLanguageRow />} />
+      <SettingsGroup>
+        <AutoSummarySwitch />
+      </SettingsGroup>
       <SettingsGroup
         title={t("Also in sessions outside Flowly")}
         description={`${t("After each turn in sessions Flowly doesn't manage, summary models read the recent conversation in priority order. If one fails, the same conversation is sent to the next model's provider.")} ${aiCostText("outside", summaryModelOf(summary.values))}`}

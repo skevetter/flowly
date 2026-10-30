@@ -65,13 +65,12 @@ Status: **已实现，用户 2026-10-22 确认设计**（卡片“重设计onboa
 - 文案：“About {tokens} tokens per agent turn: {cost} with {model} at API prices, {hundred} for 100 turns.” 等，写明是“API 价”，订阅用户据此理解为用量参考。原来 “Uses a few tokens per card.” 换成实际数字。
 - 顺带：`modelLabel` 把 `claude-<family>-<a>-<b>` 一律显示成 “Sonnet 5.5” 这样的名字（原来只认识 Haiku 5.5）。
 
-### 第 2 页：Built in（基础能力，始终开启）
+### 第 2 页：Built in（基础能力）
 
-标题 “Built in”，说明 “These run on every card. You can tune them here, not turn them off.”
+标题 “Built in”，说明 “Off until you allow sending text to a model.”（2026-10-30：模型调用默认关闭，页面含 “Send text to models” 开关和 “Auto summary” 开关，见 [MODEL-CALL-LIMITS-SPEC](MODEL-CALL-LIMITS-SPEC.md)）
 
 （2026-10-22 用户反馈后改版：先是三列各自的演示，后改为**一个完整案例**串起三个功能，见下。）
 
-- 标题旁一个 “Always on” 胶囊（三项都始终开启，只标一次）。
 - **一个完整案例**（`LoopDemo`，`client/tour-demos.tsx`）：一个框，左边 **Session**，右边 **Card**（真实 Progress 卡片，之后是 Ideas）。窄窗口上下堆叠。上方一行提示和 **Start over**（重置整个案例）。
   - Session 是一段看起来真实的对话（2026-10-22 用户反馈），用 Flowly 会话视图自己的 `TranscriptEntry`（你的消息为气泡，agent 回复按 markdown 渲染）和 `ActivityBlock`（“Thought · n tool calls”，可展开；运行中显示 Working 和最新一步）。数据按 Paseo 时间线条目的形状构造，经 `recentSessionOutput` / `groupTranscript` 分组。开场：你的请求 “After signing in, people land on /home instead of the page they came from. Fix it.”、一段思考与 3 次工具调用、agent 回复。下面是真实建议条 `NextMoves` 和消息框。对话区可滚动，新内容和建议条出现时滚到底。
   1. 开始时上一轮已结束：回复 “Fixed the login redirect: the sign-in callback now keeps `next` …”，Progress 为 State “Login redirect fixed; not tested yet.”、Target “People return to the page they came from after signing in.”、Recap “The sign-in callback dropped the next parameter; it now keeps it.”、Next “Run the tests.”，脚注 “Updated 2m ago · Haiku 5.5”，建议 **Run tests**。提示 “Try it: pick the suggested step, then send it.”

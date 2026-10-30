@@ -7,6 +7,9 @@ import type { LocaleCode } from "./i18n";
 export const SUMMARY_VERSIONS = 50;
 export const TRANSCRIPT_LIMIT = 12000;
 export const TRANSCRIPT_HEAD = 3000;
+export const MIN_TRANSCRIPT_LIMIT = 4000;
+export const DEFAULT_DAILY_CALL_LIMIT = 50;
+export const MAX_DAILY_CALL_LIMIT = 1000;
 export const DESCRIPTION_LIMIT = 2000;
 /**
  * Brevity comes from the prompt; text is never cut. This is only a storage
@@ -67,15 +70,21 @@ export const summarySettings = defineSettings({
   scope: "host",
   version: 1,
   schema: z.object({
-    summaryEnabled: z.boolean().default(true),
+    summaryEnabled: z.boolean().default(false),
+    /** Nothing leaves the host for a model until this is on, whatever the other switches say. */
+    sendTextToModels: z.boolean().default(false),
+    /** Model runs per day across summaries, memory review, digest, workflow insights and outside-session insights. */
+    dailyCallLimit: z.number().int().transform((n) => Math.min(MAX_DAILY_CALL_LIMIT, Math.max(1, n))).catch(DEFAULT_DAILY_CALL_LIMIT).default(DEFAULT_DAILY_CALL_LIMIT),
+    /** Characters of conversation text sent per run. */
+    transcriptLimit: z.number().int().transform((n) => Math.min(TRANSCRIPT_LIMIT, Math.max(MIN_TRANSCRIPT_LIMIT, n))).catch(TRANSCRIPT_LIMIT).default(TRANSCRIPT_LIMIT),
     /** `provider/model`; empty tries available AUTO_MODELS in order. */
     summaryModel: z.string().max(200).default(""),
     /** Ordered fallback list; absent preserves legacy Auto/single-model settings. */
     summaryModels: summaryModelsSchema.optional(),
     /** Generate a past day's project digest when Insights opens it (PROJECT-INSIGHTS-SPEC §7). */
-    digestEnabled: z.boolean().default(true),
+    digestEnabled: z.boolean().default(false),
     /** Review cards moved into Done for project memory candidates (PROJECT-MEMORY-SPEC §4.2, §9). */
-    retroEnabled: z.boolean().default(true),
+    retroEnabled: z.boolean().default(false),
   }),
 });
 export type SummarySettings = z.infer<typeof summarySettings.schema>;
@@ -83,6 +92,10 @@ export type SummarySettings = z.infer<typeof summarySettings.schema>;
 export function summaryModelsOf(settings?: Pick<SummarySettings, "summaryModel" | "summaryModels"> | null): string[] {
   return settings?.summaryModels ? [...settings.summaryModels] : settings?.summaryModel ? [settings.summaryModel] : [...AUTO_MODELS];
 }
+
+/** Progress summaries run only with their switch on and text sharing allowed. */
+export const summariesActive = (settings: Pick<SummarySettings, "summaryEnabled" | "sendTextToModels">) =>
+  settings.summaryEnabled && settings.sendTextToModels;
 
 /** Stored values may predate fields; the host does not apply schema defaults. */
 export function summarySettingsValues(values: unknown): SummarySettings {

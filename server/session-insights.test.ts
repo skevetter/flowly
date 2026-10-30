@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { BoardStore } from "./store";
 import { NextMoveRows } from "./next-move-rows";
 import { SessionInsightService, SessionInsightStore, type InsightSettings, type OutsideAgent } from "./session-insights";
+import { modelCallsAllowed, sharingSettings } from "./model-calls-fixture";
+import { ModelCallBlocked } from "./model-calls";
 
 vi.mock("./service", () => ({
   resolveWorktreeBaseRef: async (dir: string) => {
@@ -69,8 +71,9 @@ async function setup(options: { settings?: Partial<InsightSettings>; agentStatus
       }),
     },
   } as unknown as PaseoApi;
-  let settings: InsightSettings = { enabled: true, parts: { progress: true, nextMoves: true, ideas: true }, model: "", ...options.settings };
+  let settings: InsightSettings = { enabled: true, parts: { progress: true, nextMoves: true, ideas: true }, model: "", transcriptLimit: 12000, ...options.settings };
   const service = new SessionInsightService(store, rows, async () => settings, async () => "en", 1000, 1000, async (a) => { await a.archive(); });
+  service.claim = modelCallsAllowed;
   const agent: OutsideAgent = { id: "a1", workspaceId: "w1", parentAgentId: null, title: "Fix login", cwd: "/repo" };
   const json = (o: object) => JSON.stringify({ update: true, state: "S", target: "T", recap: "- r", next: "N", moves: [], ideas: [], ...o });
   return { store, service, paseo, replies, created, appended, sent, workspacesCreated, archived: () => archived, agent, json, set: (s: Partial<InsightSettings>) => (settings = { ...settings, ...s }) };
@@ -206,4 +209,21 @@ test("outside-session insights follows the ordered summary list and retries inva
   expect(x.created.map((a) => a.config.provider)).toEqual(["claude/claude-sonnet-5-5", "claude/claude-haiku-5-5"]);
   expect(x.archived()).toBe(2);
   expect((await x.store.read()).sessions[0].summary?.model).toBe("claude/claude-haiku-5-5");
+});
+
+test("a refused model call starts no insight session and records the error", async () => {
+  const x = await setup();
+  x.service.claim = async () => {
+    throw new ModelCallBlocked("Sending text to models is off.");
+  };
+  await x.service.enqueue(x.agent, turn("fix login"), x.paseo);
+  expect(x.created).toEqual([]);
+  expect((await x.store.read()).sessions[0].error?.message).toBe("Sending text to models is off.");
+});
+
+test("the transcript sent follows the transcript limit setting", async () => {
+  const x = await setup({ settings: { transcriptLimit: 4000 } });
+  x.replies.push({ text: x.json({}) });
+  await x.service.enqueue(x.agent, turn("x".repeat(20000)), x.paseo);
+  expect(x.created[0].prompt).toContain("omitted");
 });

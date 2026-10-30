@@ -10,6 +10,7 @@ import type { FlowLog } from "./flow-log";
 import type { GitStats } from "./git-stats";
 import type { SummaryStore } from "./summaries";
 import { runSummaryModels } from "./summary-models";
+import { ModelCallBlocked, modelCallsDenied, type ModelCallClaim } from "./model-calls";
 import type { AgentLike, UsageService } from "./usage";
 import { modelId } from "./agent-model";
 import { laneName } from "../shared/lanes";
@@ -144,6 +145,7 @@ export class InsightsService {
   private pending = new Map<string, { input: DayInput & { day: string }; force: boolean; paseo: PaseoApi }>();
   /** Reads provider logs for tokens by day (§11). */
   usage: UsageService | null = null;
+  claim: ModelCallClaim = modelCallsDenied;
   private reconciled: Promise<unknown> | null = null;
   constructor(
     readonly board: BoardStore,
@@ -353,7 +355,7 @@ export class InsightsService {
     try {
       await this.run(input, paseo);
     } catch (e) {
-      await this.digests.setError(input.projectId, input.day, e instanceof Error ? e.message : String(e)).catch(() => undefined);
+      if (!(e instanceof ModelCallBlocked)) await this.digests.setError(input.projectId, input.day, e instanceof Error ? e.message : String(e)).catch(() => undefined);
     } finally {
       this.generating.delete(input.projectId);
       const next = this.pending.get(input.projectId);
@@ -371,6 +373,7 @@ export class InsightsService {
     const { text, taskIds, project } = await this.material(input);
     if (!text) throw new Error("No activity on this day.");
     const settings = await this.settings();
+    await this.claim();
     const prompt = digestPrompt({ project: project.title, day: input.day, today: input.day === dayKey(this.now(), tz), material: text, language: await this.language() });
     const { model, output } = await this.background.use(project, paseo, (workspaceId) => runSummaryModels(paseo, summaryModelsOf(settings), {
       create: (model) => paseo.workspaces.ref(workspaceId).agents.create({

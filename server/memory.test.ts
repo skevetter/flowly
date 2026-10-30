@@ -9,6 +9,8 @@ import { MemoryError, MemoryService, memoryContext, memoryOn, memoryStore, setMe
 import type { SummarySettings } from "../shared/summary";
 import type { MemoryEntry } from "../shared/memory";
 import { BackgroundWorkspaces } from "./background-workspace";
+import { modelCallsAllowed, sharingSettings } from "./model-calls-fixture";
+import { ModelCallBlocked } from "./model-calls";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -19,13 +21,14 @@ type Created = { workspaceId: string; labels: Record<string, string>; prompt: st
 async function setup() {
   const f = await agentFixture();
   roots.push(f.root);
-  const settings: SummarySettings = { summaryEnabled: true, summaryModel: "claude/claude-haiku-5-5", digestEnabled: true, retroEnabled: true };
+  const settings: SummarySettings = sharingSettings({ summaryModel: "claude/claude-haiku-5-5" });
   const summaries = new SummaryStore(f.store.directory);
   // The review session is hard-deleted over the local daemon in production; the test records who was removed.
   const removed: string[] = [];
   const memory = new MemoryService(f.store, summaries, async () => settings, async () => "en", async () => undefined, () => Date.now(), 0, 1000, async (agent) => {
     removed.push(agent.id);
   }, new BackgroundWorkspaces(f.store.directory, async () => "live"));
+  memory.claim = modelCallsAllowed;
   f.service.memory = memory;
   const created: Created[] = [];
   const replies: (string | Error)[] = [];
@@ -387,4 +390,27 @@ test("finished-card review tries the ordered summary list and cleans both childr
   expect(x.created.map((a) => a.config?.provider)).toEqual(["claude/claude-sonnet-5-5", "claude/claude-haiku-5-5"]);
   expect(x.removed).toEqual(["review-1", "review-2"]);
   expect((await x.memory.store.read()).errors).toEqual([]);
+});
+
+test("a refused model call records the error and starts no review session", async () => {
+  const x = await setup();
+  x.memory.attach(x.model);
+  x.memory.claim = async () => {
+    throw new ModelCallBlocked("Sending text to models is off.");
+  };
+  await x.store.mutate((board) => {
+    board.tasks[0].status = "done";
+    board.workpads[0].confusions.push({ id: "c", text: "Unclear which window to test", at: new Date().toISOString() } as never);
+  });
+  await x.memory.manual("t", x.model);
+  await new Promise((r) => setTimeout(r, 50));
+  expect(x.created).toEqual([]);
+  expect((await x.memory.store.read()).errors).toEqual([expect.objectContaining({ taskId: "t", message: "Sending text to models is off." })]);
+});
+
+test("the memory view reports the review as off while text sharing is off", async () => {
+  const x = await setup();
+  expect((await x.memory.view("p")).retroEnabled).toBe(true);
+  x.settings.sendTextToModels = false;
+  expect((await x.memory.view("p")).retroEnabled).toBe(false);
 });

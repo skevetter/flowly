@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { isSummarizer, modelLabel, lastTurn, targetText, parseModelOutput, resolveModel, resolveModels, summaryModelsOf, summaryModelsSchema, summarySettings, summaryPrompt, summarySettingsValues, truncateTranscript, turnText } from "./summary";
+import { isSummarizer, modelLabel, lastTurn, targetText, parseModelOutput, resolveModel, resolveModels, summaryModelsOf, summariesActive, summaryModelsSchema, summarySettings, summaryPrompt, summarySettingsValues, truncateTranscript, turnText } from "./summary";
 
 test("turn text keeps dialogue, reduces tools to names and drops reasoning", () => {
   const text = turnText([
@@ -65,8 +65,34 @@ test("Auto model prefers Haiku 5.5 and falls back to GPT-6-Luna", () => {
 });
 
 test("settings fill missing fields with defaults", () => {
-  expect(summarySettingsValues(undefined)).toEqual({ summaryEnabled: true, summaryModel: "", digestEnabled: true, retroEnabled: true });
-  expect(summarySettingsValues({ summaryEnabled: false })).toEqual({ summaryEnabled: false, summaryModel: "", digestEnabled: true, retroEnabled: true });
+  const off = { summaryEnabled: false, sendTextToModels: false, dailyCallLimit: 50, transcriptLimit: 12000, summaryModel: "", digestEnabled: false, retroEnabled: false };
+  expect(summarySettingsValues(undefined)).toEqual(off);
+  expect(summarySettingsValues({ summaryEnabled: true })).toEqual({ ...off, summaryEnabled: true });
+});
+
+test("first-run settings send no model calls", () => {
+  expect(summariesActive(summarySettingsValues(undefined))).toBe(false);
+});
+
+test("summaries need both their switch and text sharing", () => {
+  expect(summariesActive({ summaryEnabled: true, sendTextToModels: false })).toBe(false);
+  expect(summariesActive({ summaryEnabled: false, sendTextToModels: true })).toBe(false);
+  expect(summariesActive({ summaryEnabled: true, sendTextToModels: true })).toBe(true);
+});
+
+test.each([
+  ["dailyCallLimit", 0, 1],
+  ["dailyCallLimit", 1001, 1000],
+  ["dailyCallLimit", 1.5, 50],
+  ["dailyCallLimit", "many", 50],
+  ["dailyCallLimit", 1, 1],
+  ["dailyCallLimit", 1000, 1000],
+  ["transcriptLimit", 3000, 4000],
+  ["transcriptLimit", 12001, 12000],
+  ["transcriptLimit", 4000, 4000],
+  ["transcriptLimit", 12000, 12000],
+])("%s of %s is read as %s", (key, stored, expected) => {
+  expect(summarySettingsValues({ [key]: stored })[key as "dailyCallLimit" | "transcriptLimit"]).toBe(expected);
 });
 
 test("prompt carries the card, previous summary and transcript", () => {

@@ -40,6 +40,7 @@ import {
 import type { BoardStore } from "./store";
 import type { SummaryStore } from "./summaries";
 import { runSummaryModels } from "./summary-models";
+import { modelCallsDenied, type ModelCallClaim } from "./model-calls";
 import { backgroundWorkspaces, type BackgroundWorkspaces } from "./background-workspace";
 import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import { logFailure } from "./error-report";
@@ -182,6 +183,7 @@ async function instructionFiles(root: string) {
 
 export class MemoryService {
   readonly store: MemoryStore;
+  claim: ModelCallClaim = modelCallsDenied;
   /** Cards whose review is running or waiting (shown as "Reviewing…"). */
   private running = new Set<string>();
   /** One review at a time per project (§4.2). */
@@ -223,7 +225,7 @@ export class MemoryService {
       running: [...this.running].filter((id) => board.tasks.some((t) => t.id === id && t.projectId === projectId)),
       recall: recallTotals(state.recallStats[projectId], this.now()),
       enabled: memoryOn(project),
-      retroEnabled: settings.retroEnabled,
+      retroEnabled: settings.retroEnabled && settings.sendTextToModels,
     };
   }
   /** Candidates waiting per project, for the overview chip (§5.1). */
@@ -586,7 +588,7 @@ export class MemoryService {
     this.attach(paseo);
     void (async () => {
       const settings = await this.summarySettings();
-      if (!settings.retroEnabled) return;
+      if (!settings.retroEnabled || !settings.sendTextToModels) return;
       const board = await this.board.read();
       const task = board.tasks.find((t) => t.id === taskId);
       if (!task || !memoryOn(board.projects.find((p) => p.id === task.projectId))) return;
@@ -690,6 +692,7 @@ export class MemoryService {
       return;
     }
     if (!manual && last && last.summaryId === m.latestId && last.clueAt === m.clueAt) return;
+    await this.claim();
     const models = summaryModelsOf(await this.summarySettings());
     const prompt = retroPrompt(m.text, await this.language());
     const { output } = await this.background.use(m.project, paseo, (workspaceId) => runSummaryModels(paseo, models, {
