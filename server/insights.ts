@@ -10,7 +10,7 @@ import type { FlowLog } from "./flow-log";
 import type { GitStats } from "./git-stats";
 import type { SummaryStore } from "./summaries";
 import { runSummaryModels } from "./summary-models";
-import { modelCallsDenied, type ModelCallClaim } from "./model-calls";
+import { ModelCallBlocked, modelCallsDenied, type ModelCallClaim } from "./model-calls";
 import type { AgentLike, UsageService } from "./usage";
 import { modelId } from "./agent-model";
 import { laneName } from "../shared/lanes";
@@ -355,7 +355,7 @@ export class InsightsService {
     try {
       await this.run(input, paseo);
     } catch (e) {
-      await this.digests.setError(input.projectId, input.day, e instanceof Error ? e.message : String(e)).catch(() => undefined);
+      if (!(e instanceof ModelCallBlocked)) await this.digests.setError(input.projectId, input.day, e instanceof Error ? e.message : String(e)).catch(() => undefined);
     } finally {
       this.generating.delete(input.projectId);
       const next = this.pending.get(input.projectId);

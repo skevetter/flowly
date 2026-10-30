@@ -81,12 +81,13 @@ test("summaries need both their switch and text sharing", () => {
 });
 
 test.each([
-  ["dailyCallLimit", 0, 50],
-  ["dailyCallLimit", 1001, 50],
+  ["dailyCallLimit", 0, 1],
+  ["dailyCallLimit", 1001, 1000],
   ["dailyCallLimit", 1.5, 50],
+  ["dailyCallLimit", "many", 50],
   ["dailyCallLimit", 1, 1],
   ["dailyCallLimit", 1000, 1000],
-  ["transcriptLimit", 3999, 12000],
+  ["transcriptLimit", 3000, 4000],
   ["transcriptLimit", 12001, 12000],
   ["transcriptLimit", 4000, 4000],
   ["transcriptLimit", 12000, 12000],

@@ -360,6 +360,7 @@ export class WorkflowInsightsService {
     // start collecting now and read the last week once; its first run waits one interval (INSIGHTS-REDESIGN-SPEC §3.1).
     for (const p of board.projects.filter(projectIncluded))
       if (!this.lastRun(state, p.id) && !state.collectingSince[p.id] && !this.backfilling.has(p.id)) void this.backfill(p.id, paseo).catch(log("backfill"));
+    if (!(await this.summarySettings()).sendTextToModels) return;
     const due = board.projects
       .filter(projectIncluded)
       .map((p) => ({ p, last: this.lastRun(state, p.id), since: state.collectingSince[p.id] ?? null }))

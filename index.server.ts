@@ -122,7 +122,7 @@ export default function contribute(host: PluginServerContext) {
   const sessionInsights = new SessionInsightService(new SessionInsightStore(store.directory), nextRows, async () => {
     const [native, summary] = await Promise.all([nativeValues(), summaries.settings()]);
     return {
-      enabled: native.outside,
+      enabled: native.outside && summary.sendTextToModels,
       parts: { progress: native.outsideProgress, nextMoves: native.outsideNextMoves, ideas: native.outsideIdeas },
       model: summaryModelsOf(summary),
       transcriptLimit: summary.transcriptLimit,

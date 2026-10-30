@@ -407,3 +407,10 @@ test("a refused model call records the error and starts no review session", asyn
   expect(x.created).toEqual([]);
   expect((await x.memory.store.read()).errors).toEqual([expect.objectContaining({ taskId: "t", message: "Sending text to models is off." })]);
 });
+
+test("the memory view reports the review as off while text sharing is off", async () => {
+  const x = await setup();
+  expect((await x.memory.view("p")).retroEnabled).toBe(true);
+  x.settings.sendTextToModels = false;
+  expect((await x.memory.view("p")).retroEnabled).toBe(false);
+});

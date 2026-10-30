@@ -80,7 +80,7 @@ async function setup() {
     },
   } as unknown as PaseoApi;
   let settings: WorkflowSettings = { enabled: true, model: "", intervalDays: 7, runHour: 9, timeZone: "UTC" };
-  const summary: SummarySettings = sharingSettings();
+  let summary: SummarySettings = sharingSettings();
   const log = new CommandLog(board.directory);
   const state = new WorkflowStore(board.directory);
   let now = NOW;
@@ -103,6 +103,7 @@ async function setup() {
     agentLabels,
     archived: () => archived,
     removed,
+    setSharing: (sendTextToModels: boolean) => (summary = { ...summary, sendTextToModels }),
     setSettings: (s: Partial<WorkflowSettings>) => (settings = { ...settings, ...s }),
     setNow: (t: number) => (now = t),
   };
@@ -460,4 +461,16 @@ test("a refused model call records a failed run and starts no session", async ()
   await settle(x.service);
   expect(x.created).toEqual([]);
   expect((await x.service.view("p")).lastRun).toMatchObject({ status: "error", reason: expect.stringContaining("daily limit") });
+});
+
+test("scheduled runs wait without an error while text sharing is off", async () => {
+  const x = await setup();
+  x.service.attach(x.paseo);
+  await x.log.append("p", records(10, 3));
+  x.setNow(NOW + 8 * 86_400_000);
+  x.setSharing(false);
+  await x.service.tick();
+  await settle(x.service);
+  expect((await x.service.view("p")).lastRun).toBeNull();
+  expect(x.created).toHaveLength(0);
 });

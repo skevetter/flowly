@@ -225,7 +225,7 @@ export class MemoryService {
       running: [...this.running].filter((id) => board.tasks.some((t) => t.id === id && t.projectId === projectId)),
       recall: recallTotals(state.recallStats[projectId], this.now()),
       enabled: memoryOn(project),
-      retroEnabled: settings.retroEnabled,
+      retroEnabled: settings.retroEnabled && settings.sendTextToModels,
     };
   }
   /** Candidates waiting per project, for the overview chip (§5.1). */

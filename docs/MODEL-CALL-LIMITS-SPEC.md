@@ -12,7 +12,7 @@ Host setting `task-summary` (version 1), additive fields:
 | `dailyCallLimit` | `50` (1 to 1000) | Model runs started per UTC day across all features. |
 | `transcriptLimit` | `12000` (4000 to 12000) | Characters of conversation text per run; longer text keeps its first 3000 characters and the end (`truncateTranscript`). |
 
-Out-of-range stored values read as the default. `summaryEnabled`, `digestEnabled`, `retroEnabled` and the `workflow-insights` `enabled` switch default to `false`; stored values are kept, so users who turned them on stay on.
+Out-of-range stored numbers are clamped to the range; non-numbers read as the default. `summaryEnabled`, `digestEnabled`, `retroEnabled` and the `workflow-insights` `enabled` switch default to `false`; stored values are kept, so users who turned them on stay on.
 
 ## Behavior
 
@@ -20,7 +20,7 @@ Out-of-range stored values read as the default. `summaryEnabled`, `digestEnabled
 - A run counts once; a fallback to the next summary model inside the run is not counted.
 - The counter is serialized and replaced atomically. An unreadable file is copied to `model-calls.invalid-<time>.json` and counting restarts from zero.
 - Services start with a claim that always refuses; the daemon wires the ledger in `index.server.ts`, so an unwired service sends nothing.
-- Automatic triggers (turn end, digest on read, review after Done) are skipped without an error while `sendTextToModels` is off. Manual actions (Refresh, Find memories, Run now) show the refusal.
+- Automatic triggers (turn end, outside-session insights, digest on read, review after Done, scheduled workflow runs) are skipped without an error while `sendTextToModels` is off. Manual actions (Refresh, Find memories, Run now) show the refusal; a refused digest is not stored as the day's error, so it generates once sharing is on.
 - Settings → AI features → Text sent to models holds the switch, the daily limit and the text size. The welcome tour's Built in page shows the switch.
 - The transcript cap applies to conversation excerpts (card summaries, outside-session insights). Memory review, digest and workflow insights build their input from stored summaries, clues and logs, each already bounded by its own limits.
 

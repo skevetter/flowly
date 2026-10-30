@@ -231,14 +231,18 @@ test("daily digest follows summary model priority and records the successful mod
   expect(x.archived()).toBe(0);
 });
 
-test("a refused model call records the refusal and starts no session", async () => {
+test("a refused model call keeps no stored error and starts no session", async () => {
   const x = await setup();
+  let refused!: () => void;
+  const claimed = new Promise<void>((resolve) => (refused = resolve));
   x.service.claim = async () => {
+    refused();
     throw new ModelCallBlocked("The daily limit of 1 model runs is reached.");
   };
   x.service.refresh({ projectId: "p", tz: "UTC", day: "2026-10-15" }, x.paseo);
-  await settle(x);
+  await claimed;
+  await new Promise((r) => setTimeout(r, 50));
   expect(x.created).toEqual([]);
   const view = await x.service.digest({ projectId: "p", tz: "UTC", day: "2026-10-15" }, x.paseo);
-  expect(view.error?.message).toContain("daily limit");
+  expect(view.error).toBeNull();
 });

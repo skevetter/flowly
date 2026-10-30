@@ -74,9 +74,9 @@ export const summarySettings = defineSettings({
     /** Nothing leaves the host for a model until this is on, whatever the other switches say. */
     sendTextToModels: z.boolean().default(false),
     /** Model runs per day across summaries, memory review, digest, workflow insights and outside-session insights. */
-    dailyCallLimit: z.number().int().min(1).max(MAX_DAILY_CALL_LIMIT).catch(DEFAULT_DAILY_CALL_LIMIT).default(DEFAULT_DAILY_CALL_LIMIT),
+    dailyCallLimit: z.number().int().transform((n) => Math.min(MAX_DAILY_CALL_LIMIT, Math.max(1, n))).catch(DEFAULT_DAILY_CALL_LIMIT).default(DEFAULT_DAILY_CALL_LIMIT),
     /** Characters of conversation text sent per run. */
-    transcriptLimit: z.number().int().min(MIN_TRANSCRIPT_LIMIT).max(TRANSCRIPT_LIMIT).catch(TRANSCRIPT_LIMIT).default(TRANSCRIPT_LIMIT),
+    transcriptLimit: z.number().int().transform((n) => Math.min(TRANSCRIPT_LIMIT, Math.max(MIN_TRANSCRIPT_LIMIT, n))).catch(TRANSCRIPT_LIMIT).default(TRANSCRIPT_LIMIT),
     /** `provider/model`; empty tries available AUTO_MODELS in order. */
     summaryModel: z.string().max(200).default(""),
     /** Ordered fallback list; absent preserves legacy Auto/single-model settings. */
