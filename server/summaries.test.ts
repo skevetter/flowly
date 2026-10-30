@@ -7,6 +7,8 @@ import { BoardStore } from "./store";
 import { SummaryService, SummaryStore } from "./summaries";
 import type { SummarySettings } from "../shared/summary";
 import { summaryRow } from "../shared/native-session";
+import { modelCallsAllowed, sharingSettings } from "./model-calls-fixture";
+import { ModelCallBlocked } from "./model-calls";
 
 const roots: string[] = [];
 const settle = () => new Promise((r) => setTimeout(r, 30));
@@ -78,9 +80,10 @@ async function setup(options: { claude?: boolean } = {}) {
       }),
     },
   } as unknown as PaseoApi;
-  let settings: SummarySettings = { summaryEnabled: true, summaryModel: "", digestEnabled: true, retroEnabled: true };
+  let settings: SummarySettings = sharingSettings();
   const store = new SummaryStore(board.directory);
   const service = new SummaryService(board, store, async () => settings, async () => "en", undefined, 50, async (a) => { await a.archive(); });
+  service.claim = modelCallsAllowed;
   const turn = (text: string) => [{ type: "user_message", text }, { type: "assistant_message", text: "ok " + text }];
   const json = (state: string, update = true) => JSON.stringify({ update, state, target: "Goal: g", recap: "r", next: "n" });
   return {
@@ -427,4 +430,38 @@ test("custom priority retries three models and saves only the successful model",
   expect(x.archived()).toBe(3);
   expect(await x.store.history("t")).toHaveLength(1);
   expect(await x.store.latest("t")).toMatchObject({ state: "third", model: "codex/gpt-6-luna" });
+});
+
+test("a refused model call starts no session and shows the refusal on the card", async () => {
+  const x = await setup();
+  x.service.claim = async () => {
+    throw new ModelCallBlocked("Sending text to models is off.");
+  };
+  await x.service.enqueue("t", "a1", x.turn("hi"), x.paseo);
+  expect(x.created).toEqual([]);
+  expect((await x.store.read()).errors).toEqual([expect.objectContaining({ taskId: "t", message: "Sending text to models is off." })]);
+});
+
+test("a service never wired to the call ledger sends nothing", async () => {
+  const x = await setup();
+  x.service.claim = new SummaryService(x.board, x.store, async () => sharingSettings(), async () => "en").claim;
+  await x.service.enqueue("t", "a1", x.turn("hi"), x.paseo);
+  expect(x.created).toEqual([]);
+});
+
+test("the transcript sent is cut to the transcript limit setting", async () => {
+  const x = await setup();
+  x.replies.push({ text: x.json("s") }, { text: x.json("s2") });
+  await x.service.enqueue("t", "a1", x.turn("x".repeat(20000)), x.paseo);
+  x.setSettings({ transcriptLimit: 4000 });
+  await x.service.enqueue("t", "a1", x.turn("x".repeat(20000)), x.paseo);
+  const [full, capped] = x.created.map((c) => c.prompt.length);
+  expect(full - capped).toBeGreaterThan(7500);
+  expect(full - capped).toBeLessThanOrEqual(8000);
+});
+
+test("overview reports summaries off until text sharing is allowed", async () => {
+  const x = await setup();
+  x.setSettings({ sendTextToModels: false });
+  expect((await x.service.overview()).enabled).toBe(false);
 });

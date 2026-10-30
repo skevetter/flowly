@@ -340,8 +340,7 @@ describe("state, settings and project scripts", () => {
     expect(state.findings.map((x) => x.id)).toEqual(["old-open", "new-accepted"]);
   });
   test("settings default to off, weekly at 09:00; an invalid interval falls back", () => {
-    // On by default since INSIGHTS-REDESIGN-SPEC §3.1; an explicit false stays off.
-    expect(workflowSettingsValues(undefined)).toEqual({ enabled: true, model: "", intervalDays: 7, runHour: 9, timeZone: "" });
+    expect(workflowSettingsValues(undefined)).toEqual({ enabled: false, model: "", intervalDays: 7, runHour: 9, timeZone: "" });
     expect(workflowSettingsValues({ enabled: false }).enabled).toBe(false);
     expect(workflowSettingsValues({ enabled: true, intervalDays: 5 }).intervalDays).toBe(7);
     expect(workflowSettingsValues({ intervalDays: 1, runHour: 30 })).toMatchObject({ intervalDays: 1, runHour: 9 });

@@ -51,6 +51,7 @@ import {
   type WorkflowView,
 } from "../shared/workflow-insights";
 import { logFailure } from "./error-report";
+import { modelCallsDenied, type ModelCallClaim } from "./model-calls";
 
 const DAY_MS = 86_400_000;
 const TICK_MS = 15 * 60_000;
@@ -156,6 +157,7 @@ export class WorkflowInsightsService {
   private first: ReturnType<typeof setTimeout> | null = null;
   /** Agents known to be (or not be) Flowly's own summarizer sessions. */
   private summarizer = new Map<string, boolean>();
+  claim: ModelCallClaim = modelCallsDenied;
   constructor(
     readonly board: BoardStore,
     readonly log: CommandLog,
@@ -473,6 +475,7 @@ export class WorkflowInsightsService {
     let model = "";
     try {
       model = await this.model(paseo, settings);
+      await this.claim();
       const state = await this.state.read();
       const existing = state.findings.filter((f) => f.projectId === projectId);
       const skills = await this.skillContext(project, board, state, recent, now);

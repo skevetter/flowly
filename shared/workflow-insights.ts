@@ -51,8 +51,7 @@ export const workflowInsightsSettings = defineSettings({
   scope: "host",
   version: 1,
   schema: z.object({
-    /** On by default since INSIGHTS-REDESIGN-SPEC §3.1 (2026-10-25); a stored false stays off. */
-    enabled: z.boolean().default(true),
+    enabled: z.boolean().default(false),
     /** `provider/model`; empty picks WORKFLOW_AUTO_MODELS, then the Summary model. */
     model: z.string().max(200).default(""),
     intervalDays: z

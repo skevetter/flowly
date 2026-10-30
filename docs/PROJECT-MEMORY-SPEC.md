@@ -537,7 +537,7 @@ memory: {
   - `flowly_remember` 返回 `MEMORY_DISABLED`；
   - 不再复盘；
   - 已有数据保留，Memory 页只读显示。
-- 全局 `task-summary` 设置新增 `retroEnabled`（默认 `true`，见 §14 Q2），在 Settings → AI features 中显示为 **Find memories in finished cards**，说明 “When a card moves to Done, the summary model suggests up to 3 things worth remembering. Uses a few tokens per card.”。
+- 全局 `task-summary` 设置新增 `retroEnabled`（默认 `false`，2026-10-30 起；见 §14 Q2 与 [MODEL-CALL-LIMITS-SPEC](MODEL-CALL-LIMITS-SPEC.md)），在 Settings → AI features 中显示为 **Find memories in finished cards**，说明 “When a card moves to Done, the summary model suggests up to 3 things worth remembering. Uses a few tokens per card.”。
 
 ## 10. 删除、归档与移除
 

@@ -15,6 +15,7 @@ import {
   summaryModelsOf,
   summaryPrompt,
   summaryStateSchema,
+  summariesActive,
   truncateTranscript,
   turnText,
   type SummaryEntry,
@@ -24,6 +25,7 @@ import {
 } from "../shared/summary";
 import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import { runSummaryModels } from "./summary-models";
+import { modelCallsDenied, type ModelCallClaim } from "./model-calls";
 import { logFailure } from "./error-report";
 export { availableModels } from "./summary-models";
 import { summaryRow } from "../shared/native-session";
@@ -179,7 +181,7 @@ export class SummaryService {
     const [state, settings] = await Promise.all([this.store.read(), this.settings()]);
     const latest = new Map<string, SummaryEntry>();
     for (const e of state.entries) latest.set(e.taskId, e);
-    return { latest: [...latest.values()], running: this.running(), errors: state.errors, enabled: settings.summaryEnabled };
+    return { latest: [...latest.values()], running: this.running(), errors: state.errors, enabled: summariesActive(settings) };
   }
 
   /** Queues a turn for summarizing. Resolves when this card's queue is drained. */
@@ -205,6 +207,8 @@ export class SummaryService {
     this.drains.set(taskId, drain);
     return drain;
   }
+
+  claim: ModelCallClaim = modelCallsDenied;
 
   /** Resolves when the card has no summary run in flight (wrap-up waits for it). */
   settled(taskId: string): Promise<void> {
@@ -243,13 +247,14 @@ export class SummaryService {
     const project = task && board.projects.find((p) => p.id === task.projectId);
     if (!task || !project || task.archivedAt || project.archivedAt) return null;
     const settings = await this.settings();
+    await this.claim();
     const previous = await this.store.latest(taskId);
     const prompt = summaryPrompt({
       title: task.title,
       description: task.description,
       lane: laneName(project, task.status),
       previous,
-      transcript: truncateTranscript(batch.text),
+      transcript: truncateTranscript(batch.text, settings.transcriptLimit),
       language: await this.language(),
     });
     const { model, output } = await runSummaryModels(paseo, summaryModelsOf(settings), {

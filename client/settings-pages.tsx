@@ -4,7 +4,7 @@ import { Collapse } from "./disclosure";
 import { Icon } from "@getpaseo/plugin/client/react-native";
 import { usePaseo, useRpc, useSettings } from "@getpaseo/plugin/client";
 import { useQuery } from "@tanstack/react-query";
-import { AUTO_MODELS, summaryModelsOf, type SummarySettings, modelLabel, summarySettings, summarySettingsValues } from "../shared/summary";
+import { AUTO_MODELS, DEFAULT_DAILY_CALL_LIMIT, TRANSCRIPT_LIMIT, summaryModelsOf, type SummarySettings, modelLabel, summarySettings, summarySettingsValues } from "../shared/summary";
 import {
   aiLanguageSettings,
   aiLanguageSettingsValues,
@@ -325,6 +325,61 @@ export function WorkflowPage() {
   );
 }
 
+export function AutoSummarySwitch() {
+  const summary = useStored(useSettings(summarySettings), summarySettingsValues);
+  return (
+    <SettingSwitch
+      title={t("Auto summary")}
+      value={summary.values?.summaryEnabled ?? false}
+      disabled={summary.busy}
+      onChange={(summaryEnabled) => summary.save({ summaryEnabled })}
+    />
+  );
+}
+
+const callLimitOptions = [10, 25, 50, 100, 250, 1000];
+const transcriptLimitOptions = [4000, 8000, TRANSCRIPT_LIMIT];
+const withCurrent = (options: readonly number[], current: number) => (options.includes(current) ? options : [...options, current].sort((a, b) => a - b));
+
+/** The switch every model call waits for, and the caps on how much and how often text is sent. */
+export function TextSharingGroup({ bare = false }: { bare?: boolean }) {
+  const summary = useStored(useSettings(summarySettings), summarySettingsValues);
+  const calls = summary.values?.dailyCallLimit ?? DEFAULT_DAILY_CALL_LIMIT;
+  const characters = summary.values?.transcriptLimit ?? TRANSCRIPT_LIMIT;
+  const characterLabel = (count: number) => t("{count} characters", { count: String(count) });
+  return (
+    <SettingsGroup title={bare ? undefined : t("Text sent to models")}>
+      <SettingSwitch
+        title={t("Send text to models")}
+        detail={t("Conversation excerpts, card titles and summaries go to the provider of your summary models and can include private project content. While this is off nothing is sent, whatever the switches below say.")}
+        value={summary.values?.sendTextToModels ?? false}
+        disabled={summary.busy}
+        onChange={(sendTextToModels) => summary.save({ sendTextToModels })}
+      />
+      {!bare && (
+        <>
+          <SettingSelect
+            title={t("Model runs per day")}
+            value={String(calls)}
+            placeholder={String(calls)}
+            disabled={summary.busy}
+            options={withCurrent(callLimitOptions, calls).map((n) => ({ value: String(n), label: String(n) }))}
+            onChange={(next) => summary.save({ dailyCallLimit: Number(next) })}
+          />
+          <SettingSelect
+            title={t("Text per run")}
+            value={String(characters)}
+            placeholder={characterLabel(characters)}
+            disabled={summary.busy}
+            options={withCurrent(transcriptLimitOptions, characters).map((n) => ({ value: String(n), label: characterLabel(n) }))}
+            onChange={(next) => summary.save({ transcriptLimit: Number(next) })}
+          />
+        </>
+      )}
+    </SettingsGroup>
+  );
+}
+
 /** AI features: what the plugin writes for you, and the ideas agents propose. */
 export function AiPage() {
   const summary = useStored(useSettings(summarySettings), summarySettingsValues);
@@ -343,15 +398,11 @@ export function AiPage() {
       >
         <AiLanguageRow />
       </SettingsGroup>
+      <TextSharingGroup />
       <SettingsGroup
         title={t("Task progress summary")}
       >
-        <SettingSwitch
-          title={t("Auto summary")}
-          value={summary.values?.summaryEnabled ?? true}
-          disabled={summary.busy}
-          onChange={(summaryEnabled) => summary.save({ summaryEnabled })}
-        />
+        <AutoSummarySwitch />
       </SettingsGroup>
       <MemoryFeatureGroup />
       <InsightsFeatureGroup />
@@ -433,7 +484,7 @@ export function MemoryFeatureGroup({ bare = false }: { bare?: boolean }) {
       <SettingSwitch
         title={t("Find memories in finished cards")}
         detail={aiCostText("memoryReview", summaryModelOf(summary.values))}
-        value={on && (summary.values?.retroEnabled ?? true)}
+        value={on && (summary.values?.retroEnabled ?? false)}
         disabled={summary.busy || !on}
         onChange={(retroEnabled) => summary.save({ retroEnabled })}
       />
@@ -459,7 +510,7 @@ export function InsightsFeatureGroup({ bare = false, workflow = false }: { bare?
       <SettingSwitch
         title={t("Daily digest")}
         detail={aiCostText("digest", summaryModelOf(summary.values))}
-        value={on && (summary.values?.digestEnabled ?? true)}
+        value={on && (summary.values?.digestEnabled ?? false)}
         disabled={summary.busy || !on}
         onChange={(digestEnabled) => summary.save({ digestEnabled })}
       />

@@ -38,7 +38,8 @@ import { NextMoveRows } from "./server/next-move-rows";
 import { SessionInsightService, SessionInsightStore } from "./server/session-insights";
 import { SummaryService, SummaryStore } from "./server/summaries";
 import { UsageService } from "./server/usage";
-import { summarySettings, summarySettingsValues, summaryModelsOf } from "./shared/summary";
+import { summarySettings, summarySettingsValues, summaryModelsOf, summariesActive } from "./shared/summary";
+import { ModelCallLedger } from "./server/model-calls";
 import { FlowLog } from "./server/flow-log";
 import { ProjectFolders, snapshotPath } from "./server/project-folder";
 import { GitStats } from "./server/git-stats";
@@ -110,6 +111,9 @@ export default function contribute(host: PluginServerContext) {
     },
     aiLanguage,
   );
+  const modelCalls = new ModelCallLedger(store.directory);
+  const claimModelCall = async () => modelCalls.claim(await summaries.settings());
+  summaries.claim = claimModelCall;
   // Progress, next steps and ideas for sessions Flowly does not manage (NATIVE-SESSION-SPEC §12); off by default.
   const nativeValues = async () => {
     const state = await nativePrefs.read().catch(() => null);
@@ -121,17 +125,20 @@ export default function contribute(host: PluginServerContext) {
       enabled: native.outside,
       parts: { progress: native.outsideProgress, nextMoves: native.outsideNextMoves, ideas: native.outsideIdeas },
       model: summaryModelsOf(summary),
+      transcriptLimit: summary.transcriptLimit,
     };
   }, aiLanguage);
+  sessionInsights.claim = claimModelCall;
   // Untrimmed event log + project insights (PROJECT-INSIGHTS-SPEC).
   const flow = new FlowLog(store.directory);
   store.flow = flow;
   // With Insights off, no daily digest is written (ONBOARDING-SETUP-SPEC §6).
   const insightsSummarySettings = async () => {
     const [summary, features] = await Promise.all([summaries.settings(), featureValues()]);
-    return { ...summary, digestEnabled: summary.digestEnabled && features.insights };
+    return { ...summary, digestEnabled: summary.digestEnabled && summary.sendTextToModels && features.insights };
   };
   const insights = new InsightsService(store, flow, new GitStats(), summaries.store, new DigestStore(store.directory), insightsSummarySettings, aiLanguage);
+  insights.claim = claimModelCall;
   void insights.reconcile().catch((e) => logFailure("Kanban flow log backfill failed:", e));
   server.handle(rpc.projectInsights, async ({ etag, ...input }, { paseo }) => ifChanged(await insights.project(input, paseo), etag));
   server.handle(rpc.projectDigest, (input, { paseo }) => insights.digest(input, paseo));
@@ -158,6 +165,7 @@ export default function contribute(host: PluginServerContext) {
   };
   const commands = new CommandLog(store.directory);
   const workflow = new WorkflowInsightsService(store, commands, new WorkflowStore(store.directory), flow, workflowValues, summaries.settings, aiLanguage);
+  workflow.claim = claimModelCall;
   workflow.start();
   // Turning the switch on reads the last week of sessions once (§3.3).
   let workflowWasOn: boolean | null = null;
@@ -262,6 +270,7 @@ export default function contribute(host: PluginServerContext) {
   tools.agents.connectors = connectors;
   // Project memory (PROJECT-MEMORY-SPEC): confirmed knowledge shared across a project's cards.
   const memory = new MemoryService(store, summaries.store, summaries.settings, aiLanguage, (taskId) => summaries.settled(taskId));
+  memory.claim = claimModelCall;
   // Skill material: card summaries and project memory (INSIGHTS-REDESIGN-SPEC §3.2).
   workflow.skillSources = {
     summaries: async () => (await summaries.store.read()).entries,
@@ -633,7 +642,7 @@ export default function contribute(host: PluginServerContext) {
       logFailure("Kanban workpad plan not recorded:", e),
     );
     // Progress summary (TASK-SUMMARY-SPEC): runs after the hook returns, never blocks it.
-    if (event.outcome.kind === "completed" && (await summaries.settings()).summaryEnabled)
+    if (event.outcome.kind === "completed" && summariesActive(await summaries.settings()))
       void summaries.enqueue(identity.taskId, identity.agentId, timeline, paseo, endedAt);
   });
   // Queued follow-ups go out when any session's turn ends (Paseo "queue").

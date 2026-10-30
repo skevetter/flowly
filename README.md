@@ -54,7 +54,7 @@ The same features follow a Flowly session into **Paseo's own session view**: eac
 
 ### 3. Run summaries
 
-After every completed turn a cheap model (Haiku 5.5 by default, configurable) updates the card's **state / target / recap / next**. Past versions are kept, so you can still see how far a card got after it is Done. Summaries never change the card's status.
+With **Send text to models** and **Auto summary** on (both off by default), a cheap model (Haiku 5.5 by default, configurable) updates the card's **state / target / recap / next** after every completed turn. Past versions are kept, so you can still see how far a card got after it is Done. Summaries never change the card's status.
 
 ![Card summary: state, target, recap and next step](docs/promo/screenshots/03-card-summary.png)
 
@@ -93,7 +93,7 @@ Insights shows a year of the project's activity, GitHub style: one square per da
 </details>
 
 
-**Skills** (on by default, turn it off in the welcome tour or Settings → AI features): every week a model you choose reads the project's cards (summaries, acceptance criteria, your own corrections kept by project memory), confirmed memory and the redacted shell commands agents ran, and drafts complete skills, a procedure agents did differently each time (shipping through a pull request and waiting for review) or what several cards of one kind taught (plugin performance). **Add to project** writes `.agents/skills/<name>/SKILL.md` (read by Codex) and links it from `.claude/skills/<name>` (read by Claude Code); nothing is committed for you. Later runs propose updates to the skills Flowly added, shown as a diff. The same run still suggests `paseo.json` scripts, worktree setup, repo tools and AGENTS.md rules; each becomes a card with one click. Each run replaces the drafts nobody acted on; quiet weeks are skipped without calling the model, and the first scheduled run waits one full period. Agents see the project's `paseo.json` scripts in their task context.
+**Skills** (off by default; turn it on in the welcome tour or Settings → AI features): every week a model you choose reads the project's cards (summaries, acceptance criteria, your own corrections kept by project memory), confirmed memory and the redacted shell commands agents ran, and drafts complete skills, a procedure agents did differently each time (shipping through a pull request and waiting for review) or what several cards of one kind taught (plugin performance). **Add to project** writes `.agents/skills/<name>/SKILL.md` (read by Codex) and links it from `.claude/skills/<name>` (read by Claude Code); nothing is committed for you. Later runs propose updates to the skills Flowly added, shown as a diff. The same run still suggests `paseo.json` scripts, worktree setup, repo tools and AGENTS.md rules; each becomes a card with one click. Each run replaces the drafts nobody acted on; quiet weeks are skipped without calling the model, and the first scheduled run waits one full period. Agents see the project's `paseo.json` scripts in their task context.
 
 ## Languages
 
@@ -105,7 +105,7 @@ The interface follows your device language, or pick one in **Flowly settings →
 
 ## Quick start
 
-The first time you open Flowly, a short welcome tour explains projects, cards and sessions and sets the basics: interface and AI output language, the progress model, whether progress, next steps and ideas also apply to sessions outside Flowly (on by default; each of their turns then runs the summary model once), and whether Project memory and Insights are on. Skip keeps the defaults. Change any of it later from the gear at the bottom left.
+The first time you open Flowly, a short welcome tour explains projects, cards and sessions and sets the basics: interface and AI output language, the progress model, whether progress, next steps and ideas also apply to sessions outside Flowly (each of their turns then runs the summary model once), and whether Project memory and Insights are on. Skip keeps the defaults. Change any of it later from the gear at the bottom left.
 
 1. **New project**: pick a directory (or several repositories) to register as a native Paseo project.
 2. **New task**: describe the work; optionally start an agent together with the card.
@@ -140,6 +140,12 @@ Flowly does not read the Paseo daemon credential (`~/.paseo/local-credential`) a
 - Hard-deleting temporary summary, insight and memory-review sessions. They are archived instead.
 - Reusing the background workspace after it was archived. Flowly creates a new one.
 - The Paseo version in error reports. `paseo_version` is empty.
+
+### Model calls, cost and privacy
+
+Flowly runs no model until you turn on **Settings → AI features → Send text to models** (off by default). With it on, the features you switch on (Auto summary, Find memories in finished cards, Daily digest, Skills, and Progress for sessions outside Flowly; all off by default) start short child sessions that send text to the provider of your summary models: conversation excerpts, card titles and descriptions, summaries, and for Skills redacted shell commands. **That text can include private project content.** Each run costs tokens on your own provider account; Settings shows an estimate next to each switch.
+
+Two caps limit the spend. **Model runs per day** (default 50, counted per UTC day across all features) refuses further runs until the next day, and the refusal shows where that feature shows errors. **Text per run** (default and maximum 12000 characters) cuts a conversation excerpt, keeping the start and the end. Details: [docs/MODEL-CALL-LIMITS-SPEC.md](docs/MODEL-CALL-LIMITS-SPEC.md).
 
 ### Telemetry
 
