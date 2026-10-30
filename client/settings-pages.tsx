@@ -104,7 +104,23 @@ export function GeneralPage({ onTour, onWhatsNew }: { onTour(): void; /** Reopen
         />
       </SettingsGroup>
       <UsageDataGroup />
+      <RemoteImagesGroup />
     </SettingsPage>
+  );
+}
+
+function RemoteImagesGroup() {
+  const view = useBoardView();
+  return (
+    <SettingsGroup title={t("Remote images")}>
+      <SettingSwitch
+        title={t("Load remote images automatically")}
+        detail={t("The image's host sees this computer's address and when you looked. While this is off, a tap loads one image.")}
+        value={view.values?.loadRemoteImages ?? false}
+        disabled={!view.ready}
+        onChange={(loadRemoteImages) => void view.update({ loadRemoteImages })}
+      />
+    </SettingsGroup>
   );
 }
 

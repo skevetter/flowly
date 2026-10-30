@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { displayableImage, extractImages, localImagePath } from "./images";
+import { displayableImage, extractImages, isRemoteImage, localImagePath, mayRequestImage } from "./images";
 
 test("pasted-image placeholders and markdown images are extracted in order", () => {
   const r = extractImages("Look at this [Image: source: /private/tmp/a/images/1.png]\nand ![chart](https://x.y/c.png) ok");
@@ -24,4 +24,21 @@ test("displayable and local path rules", () => {
   expect(displayableImage("https://x/y")).toBe(true);
   expect(localImagePath("file:///a/b.png")).toBe("/a/b.png");
   expect(localImagePath("https://x/y.png")).toBeNull();
+});
+
+test("a remote image is not requested by default", () => {
+  expect(mayRequestImage("https://x.y/c.png", { autoLoadRemote: false, approved: false })).toBe(false);
+  expect(mayRequestImage("http://x.y/c.png", { autoLoadRemote: false, approved: false })).toBe(false);
+});
+
+test("a remote image is requested after approval or when auto-load is on", () => {
+  expect(mayRequestImage("https://x.y/c.png", { autoLoadRemote: false, approved: true })).toBe(true);
+  expect(mayRequestImage("https://x.y/c.png", { autoLoadRemote: true, approved: false })).toBe(true);
+});
+
+test("local images never need approval", () => {
+  expect(mayRequestImage("/tmp/a.png", { autoLoadRemote: false, approved: false })).toBe(true);
+  expect(mayRequestImage("file:///tmp/a.png", { autoLoadRemote: false, approved: false })).toBe(true);
+  expect(isRemoteImage("HTTPS://x.y/c.png")).toBe(true);
+  expect(isRemoteImage("/tmp/a.png")).toBe(false);
 });

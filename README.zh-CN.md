@@ -147,6 +147,10 @@ Flowly 不读取 Paseo daemon 凭据（`~/.paseo/local-credential`），也不�
 - 复用已归档的后台 workspace。每次运行新建一个，并在项目中最后一个运行结束时归档，因此活动 workspace 列表不会增长；Paseo 中每次运行保留一条已归档记录。归档失败的 workspace 会在下次运行前再次归档。
 - 错误报告中的 Paseo 版本，`paseo_version` 为空。
 
+### 远程图片
+
+会话记录可能引用其他主机上的图片。点按图片上的 **加载图片**,或打开 **设置 → 通用 → 自动加载远程图片**(默认关闭)之前,Flowly 不会请求任何远程图片。图片所在主机会看到这台电脑的地址和查看时间。守护进程所在机器上的本地图片不受影响。链接只允许 `http` 或 `https` 协议。
+
 ### 遥测
 
 遥测默认关闭，在 设置 → General → *Send anonymous usage data* 打开并在 `telemetry` 插件设置里填写兼容 PostHog capture API 的 `apiKey` 和 `endpoint` 之前不会发送任何数据。打开后，daemon 每天向该地址发送一次匿名使用数据：Flowly 版本、操作系统和 Node 版本、界面语言、开启了哪些功能、大致的项目数和卡片数，以及自上次以来新建的卡片、agent 回合、交付、下一步建议、ideas 和 memory 的次数和用到的模型。Flowly 的 daemon 出错时，还会发送错误的类型、错误码，以及出错位置在 Flowly 自身代码的哪个文件哪一行，同一种错误每天最多一次。不会发送错误消息、标题、描述、消息、你的路径（只发 Flowly 自身代码里的文件路径）、仓库名，也不会发送项目、卡片或 session 的 ID，不做基于 IP 的定位。给 Paseo daemon 设置 `DO_NOT_TRACK=1`（或 `FLOWLY_TELEMETRY=0`）会无视设置强制关闭。具体发送哪些字段见 [`server/telemetry.ts`](server/telemetry.ts) 和 [docs/TELEMETRY-SPEC.md](docs/TELEMETRY-SPEC.md)。

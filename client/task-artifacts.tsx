@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState } from "react";
-import { Image, Linking, Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import { Icon, useToast } from "@getpaseo/plugin/client/react-native";
 import { useRpc } from "@getpaseo/plugin/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { SessionMarkdown } from "./session-content";
 import { PagedRows, Section, ShowMore, pageSize, type SectionState } from "./disclosure";
 import { FocusTarget, Marked, limitFor, useFocusTarget, useMark } from "./drawer-focus";
 import { AiMark, Actions, Button, Choices, Field, IconButton, Label, Notice, Theme, font, message, space, touch, useTheme, noFocusRing } from "./ui";
+import { openWebUrl } from "./open-url";
 import { t, tn } from "../shared/i18n";
 import { BrandIcon } from "./brand-icons";
 import { ExternalPreview, LinkExternal, connectionsByFamily, pickKey, itemKindLabel, linkTitles, useConnections } from "./connectors";
@@ -121,7 +122,7 @@ export function TaskArtifacts({ task, active, disabled, section }: { task: Task;
   const openArtifact = (artifact: Artifact) => {
     if (artifact.external) return setPreviewing(artifact);
     if (artifact.kind === "url")
-      return void Linking.openURL(artifact.target).catch(() => toast.show(t("Could not open the link."), { variant: "error" }));
+      return void openWebUrl(artifact.target).catch(() => toast.show(t("Could not open the link."), { variant: "error" }));
     setPreviewing(artifact);
   };
   return (

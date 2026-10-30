@@ -1401,5 +1401,9 @@ const catalog: Catalog = {
   "Previous day": "Vorheriger Tag",
   "Next day": "Nächster Tag",
   "agent {time}": "Agent {time}",
+  "Remote images": "Remote-Bilder",
+  "Load remote images automatically": "Remote-Bilder automatisch laden",
+  "The image's host sees this computer's address and when you looked. While this is off, a tap loads one image.": "Der Host des Bildes sieht die Adresse dieses Computers und den Zeitpunkt. Solange dies aus ist, lädt ein Tippen ein einzelnes Bild.",
+  "Load image": "Bild laden",
 };
 export default catalog;

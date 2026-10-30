@@ -6,7 +6,7 @@ const imageExt = /\.(png|jpe?g|gif|webp)$/i;
 
 /** Whether a reference may be shown: http(s) URLs, or absolute/file:// paths to image files. */
 export function displayableImage(src: string) {
-  if (/^https?:\/\//i.test(src)) return true;
+  if (isRemoteImage(src)) return true;
   const path = src.replace(/^file:\/\//i, "");
   return path.startsWith("/") && imageExt.test(path);
 }
@@ -37,8 +37,15 @@ export function extractImages(text: string): { text: string; images: ImageRef[] 
   return { text: rest.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim(), images };
 }
 
+export const isRemoteImage = (src: string) => /^https?:\/\//i.test(src);
+
+/** Remote hosts learn the viewer's address and time, so a remote image is requested only after consent. */
+export function mayRequestImage(src: string, consent: { autoLoadRemote: boolean; approved: boolean }) {
+  return !isRemoteImage(src) || consent.autoLoadRemote || consent.approved;
+}
+
 /** Local path for a file reference (file:// stripped); null for remote URLs. */
 export function localImagePath(src: string) {
-  if (/^https?:\/\//i.test(src) || /^data:image\//i.test(src)) return null;
+  if (isRemoteImage(src) || /^data:image\//i.test(src)) return null;
   return src.replace(/^file:\/\//i, "");
 }
