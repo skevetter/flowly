@@ -29,4 +29,4 @@
 
 先前会话的调查报告 `docs/verification/flow-constraints-audit-2026-10-22.md` 及同名目录仍留在原处，本轮未修改。
 
-测试资源及归属在 `live-state.json`；用户要求保留私有测试仓库 `JasprW/flowly-delivery-fixture-20261022-036d`（含已合入测试 PR 的历史），其余本轮 native fixture 资源需清理。永久 Tinylink 项目、原 6 卡、3 个既有 Haiku 会话与原始 checkout 不属于本轮，必须保留。
+测试资源及归属在 `live-state.json`；用户要求保留私有测试仓库 `owner/flowly-delivery-fixture-20261022-036d`（含已合入测试 PR 的历史），其余本轮 native fixture 资源需清理。永久 Tinylink 项目、原 6 卡、3 个既有 Haiku 会话与原始 checkout 不属于本轮，必须保留。

@@ -21,11 +21,11 @@
       "remoteBeforeAbsent": true,
       "cardId": "133dea58-d78a-41b4-b3f0-764fc95ebac2",
       "workspaceId": "wks_93d2103037406a88",
-      "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/bench-constraints-20261022150226138-4f8bce-sonnet",
+      "directory": "/home/user/.paseo/worktrees/246o38bv/bench-constraints-20261022150226138-4f8bce-sonnet",
       "checkId": "bench-constraints-20261022150226138-4f8bce-sonnet",
-      "checkFile": "/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/sonnet/check.mjs",
+      "checkFile": "/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/sonnet/check.mjs",
       "checkHash": "7e61645b17200d078e62c7dbdc64d1469389cca7286b8134bbd8d6c28d0e323c",
-      "checkCommand": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/sonnet/check.mjs'",
+      "checkCommand": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/sonnet/check.mjs'",
       "id": "d1ec6025-c302-42e6-819e-1e479b388f17",
       "initialBefore": {
         "task": {
@@ -80,11 +80,11 @@
       "remoteBeforeAbsent": true,
       "cardId": "13878a8f-7851-4d1d-8cbb-c2ff367bfbd0",
       "workspaceId": "wks_957507a85b0966b3",
-      "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/bench-constraints-20261022150226138-4f8bce-gpt",
+      "directory": "/home/user/.paseo/worktrees/246o38bv/bench-constraints-20261022150226138-4f8bce-gpt",
       "checkId": "bench-constraints-20261022150226138-4f8bce-gpt",
-      "checkFile": "/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs",
+      "checkFile": "/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs",
       "checkHash": "ca5baa9b6d591bb1b52eeb77446db483372600ec2e3d71d21b89ce0289450316",
-      "checkCommand": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+      "checkCommand": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
       "id": "44f67118-24ed-4f2f-9648-6730bb49c1df",
       "initialBefore": {
         "task": {

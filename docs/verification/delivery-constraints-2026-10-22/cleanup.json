@@ -36,7 +36,7 @@
     "prevCursor": null,
     "hasMore": false
   },
-  "retainedRepo": "JasprW/flowly-delivery-fixture-20261022-036d",
+  "retainedRepo": "owner/flowly-delivery-fixture-20261022-036d",
   "originalWorkspaceNote": "5 original workspaces and 3 original Haiku sessions resolve and remain unarchived. The original Done demo card references wks_a4e7f5a7a51ef2fc, which does not resolve; this test never archived that id. The 2026-10-20 delivery-reminders report already listed only 5 permanent workspaces. No resource was restored to hide this legacy inconsistency.",
   "localBranchCleanup": {
     "state": "unrun",

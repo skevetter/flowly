@@ -15,7 +15,7 @@
     "sequence": 1422,
     "timestamp": "2026-10-22T11:53:09.781Z",
     "stream": "stdout",
-    "message": "Flowly store ready: /Users/bofan.wang/.paseo/plugin-data/flowly"
+    "message": "Flowly store ready: /home/user/.paseo/plugin-data/flowly"
   },
   {
     "sequence": 1423,

@@ -67,7 +67,7 @@ Primary observation: observed
 - C01.read: proactive=UNKNOWN, final=UNKNOWN. Successful task read must precede observed work
 - C02.stage: proactive=UNKNOWN, final=UNKNOWN. No precise work/stage boundary
 - C03.execution: proactive=UNKNOWN, final=UNKNOWN. No actual exact-command check result; runner verification is not agent execution
-- C04.https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/5: proactive=PASS, final=PASS. Only this-turn successful receipts linked to actual output count
+- C04.https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/5: proactive=PASS, final=PASS. Only this-turn successful receipts linked to actual output count
 - C05.delivery: proactive=PASS, final=PASS. T1/T3 overall review; T2 may use result
 - C05.outputs: proactive=PASS, final=PASS. Empty artifactIds is an explicit declaration; omitted field is not
 - C05.nextMoves: proactive=PASS, final=PASS. Carrying is proactive only; independent this-turn declaration satisfies final

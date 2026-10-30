@@ -16,7 +16,7 @@
     "history": {
       "sha": "2e2b9bdd0855f61765effbfd9cbc56018d256633",
       "source": "saved-verified-pr",
-      "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+      "repository": "owner/flowly-delivery-fixture-20261022-036d",
       "observedAt": "2026-10-23T02:02:44.842Z",
       "proof": "docs/verification/constraint-benchmark/20261023020035204-8b1863/operator-cleanup-review.json"
     },

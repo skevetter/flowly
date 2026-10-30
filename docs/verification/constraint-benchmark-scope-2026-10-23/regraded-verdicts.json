@@ -246,7 +246,7 @@
               "evidence": []
             },
             {
-              "id": "C04.https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/6",
+              "id": "C04.https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/6",
               "proactive": "PASS",
               "final": "PASS",
               "reason": "Only this-turn successful receipts linked to actual output count",
@@ -585,7 +585,7 @@
               "evidence": []
             },
             {
-              "id": "C04.https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/7",
+              "id": "C04.https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/7",
               "proactive": "PASS",
               "final": "PASS",
               "reason": "Only this-turn successful receipts linked to actual output count",

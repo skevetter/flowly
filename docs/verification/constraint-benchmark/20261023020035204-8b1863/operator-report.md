@@ -16,7 +16,7 @@ run：`20261023020035204-8b1863`。原样使用 `docs/verification/constraint-be
 - **Sonnet T2：缺少收尾。** 该回合没有本 agent 的结果/交付成功回执，也没有 outputs / nextMoves 声明。回合 idle 和宿主的状态事件不能替代模型业务回执。C05 最终失败，后续 T3 的完成没有回填这次缺失。
 - **GPT T1：执行检查时阶段仍为 development，应为 test；整体交付未达到 B01 指定的 in_review。** 它实际有 kind=result、文件 output 与 nextMoves，不应误称“完全没报告”或“没登记文件”。评分器的 C05.outputs 失败随缺少合格整体交付发生，不能再把它当作独立的“result 未带 outputs”事实重复计数。
 - **GPT T2 全部适用项 PASS。** T1 的失败没有阻断 T3 真实 PR 观测。
-- 两模型均创建并合入真实 PR，且本回合 output 登记通过：[Sonnet #6](https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/6)、[GPT #7](https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/7)。head / merge 文件内容核对通过，私有仓库及合入历史保留。
+- 两模型均创建并合入真实 PR，且本回合 output 登记通过：[Sonnet #6](https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/6)、[GPT #7](https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/7)。head / merge 文件内容核对通过，私有仓库及合入历史保留。
 
 ## GPT 范围告警与清理
 

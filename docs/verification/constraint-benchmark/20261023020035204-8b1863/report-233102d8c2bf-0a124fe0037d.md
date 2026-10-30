@@ -50,7 +50,7 @@ Primary observation: observed
 - C03.execution: proactive=UNKNOWN, final=UNKNOWN. No actual exact-command result or independently proven same-input T3 reuse
 - task.file: proactive=PASS, final=PASS. The requested file must actually contain text; environment interruption is not an incomplete-task violation
 - task.real-pr: proactive=PASS, final=PASS. Owned merged PR and head/merge contents must match the actual file; missing content evidence is UNKNOWN
-- C04.https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/6: proactive=PASS, final=PASS. Only this-turn successful receipts linked to actual output count
+- C04.https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/6: proactive=PASS, final=PASS. Only this-turn successful receipts linked to actual output count
 - C05.delivery: proactive=PASS, final=PASS. T1/T3 overall review; T2 may use result
 - C05.outputs: proactive=PASS, final=PASS. Empty artifactIds is an explicit declaration; omitted field is not
 - C05.nextMoves: proactive=PASS, final=PASS. Carrying is proactive only; independent this-turn declaration satisfies final
@@ -97,7 +97,7 @@ Primary observation: observed
 - task.file: proactive=PASS, final=PASS. The requested file must actually contain text; environment interruption is not an incomplete-task violation
 - task.scope: proactive=FAIL, final=FAIL. Observed changes outside the single allowed file
 - task.real-pr: proactive=PASS, final=PASS. Owned merged PR and head/merge contents must match the actual file; missing content evidence is UNKNOWN
-- C04.https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/7: proactive=PASS, final=PASS. Only this-turn successful receipts linked to actual output count
+- C04.https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/7: proactive=PASS, final=PASS. Only this-turn successful receipts linked to actual output count
 - C05.delivery: proactive=PASS, final=PASS. T1/T3 overall review; T2 may use result
 - C05.outputs: proactive=PASS, final=PASS. Empty artifactIds is an explicit declaration; omitted field is not
 - C05.nextMoves: proactive=PASS, final=PASS. Carrying is proactive only; independent this-turn declaration satisfies final

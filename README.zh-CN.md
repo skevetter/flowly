@@ -178,6 +178,10 @@ GitHub Actions 对 PR 和 main 运行 Node 22/24 的类型检查、测试和真�
 
 根目录代码只有 `index.client.tsx` 和 `index.server.ts`；其余在 `client/`、`server/` 和与运行环境无关的 `shared/` 中。设计、spec 与验收记录都在 [`docs/`](docs/)：建议先读 [`SPEC-OUTLINE.md`](docs/SPEC-OUTLINE.md)、[`SINGLE-ROOT-SPEC.md`](docs/SINGLE-ROOT-SPEC.md) 和 [`PROGRESS.md`](docs/PROGRESS.md)。给贡献者和 agent 的项目规则见 [`AGENTS.md`](AGENTS.md)。发布与宣传材料（文案、演示项目脚本、截图脚本）在 [`docs/promo/`](docs/promo/README.md)。
 
+## 验证目录
+
+`docs/verification` 仅作历史保留,只含 `benchmarks/constraints/*.checks.mjs` 回放的约束基准证据,其中的个人路径、账号名和主机名已替换。较早的报告和截图(包括已移除行为的内容)已删除,仍可在 git 历史中找到。规格文档可能仍引用已删除的报告路径。
+
 ## 许可证
 
 [MIT](LICENSE) © 2026 Bofan Wang

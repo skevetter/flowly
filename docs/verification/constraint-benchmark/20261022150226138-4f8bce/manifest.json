@@ -2,9 +2,9 @@
   "runId": "20261022150226138-4f8bce",
   "config": {
     "projectId": "3db2ad5b-e6c4-4054-b2ed-a13a8dfa0663",
-    "repoPath": "/Users/bofan.wang/Developer/personal/flowly-test/tinylink",
+    "repoPath": "/home/user/Developer/personal/flowly-test/tinylink",
     "baseCommit": "47899f7286df26700d4235800825b2ecbcee12bb",
-    "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+    "repository": "owner/flowly-delivery-fixture-20261022-036d",
     "parentAgentId": "036d5d2b-d2b0-4b54-9ef7-d80c04a0896f",
     "turnTimeoutMs": 900000,
     "runTimeoutMs": 3600000,
@@ -88,7 +88,7 @@
     "installation": [
       {
         "id": "flowly",
-        "path": "/Users/bofan.wang/Developer/personal/paseo-utlra-kanban",
+        "path": "/home/user/flowly",
         "status": "running"
       }
     ],

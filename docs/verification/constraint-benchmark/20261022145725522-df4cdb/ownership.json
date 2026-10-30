@@ -15,7 +15,7 @@
       "remoteBeforeAbsent": true,
       "cardId": "49cf0ba8-58ad-48ea-8f35-0730e177c647",
       "workspaceId": "wks_4fd00dbd5ed503bb",
-      "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/bench-constraints-20261022145725522-df4cdb-sonnet",
+      "directory": "/home/user/.paseo/worktrees/246o38bv/bench-constraints-20261022145725522-df4cdb-sonnet",
       "branchExpected": "47899f7286df26700d4235800825b2ecbcee12bb",
       "cleaned": true
     },
@@ -33,7 +33,7 @@
       "remoteBeforeAbsent": true,
       "cardId": "beb2cc41-924c-4586-89c3-dae56e241c7f",
       "workspaceId": "wks_30746d2c00320839",
-      "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/bench-constraints-20261022145725522-df4cdb-gpt",
+      "directory": "/home/user/.paseo/worktrees/246o38bv/bench-constraints-20261022145725522-df4cdb-gpt",
       "branchExpected": "47899f7286df26700d4235800825b2ecbcee12bb",
       "cleaned": true
     }

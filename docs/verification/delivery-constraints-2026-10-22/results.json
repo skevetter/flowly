@@ -4,7 +4,7 @@
     "session": "7d43e887-4108-4e7f-ae9e-14c418c48a83",
     "pass": true,
     "prUrls": [
-      "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/3"
+      "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/3"
     ],
     "receiptIds": [
       "b6e2f886-7326-460d-a2b6-edf6621da692"
@@ -14,7 +14,7 @@
       "2026-10-22T11:56:04.109Z"
     ],
     "notices": [
-      "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/3: External details could not be read; no external status or content was verified."
+      "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/3: External details could not be read; no external status or content was verified."
     ]
   },
   {
@@ -22,7 +22,7 @@
     "session": "6a79016f-dca4-40eb-9af1-3498e1624be2",
     "pass": true,
     "prUrls": [
-      "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/4"
+      "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/4"
     ],
     "receiptIds": [
       "48ad72fb-4363-4782-b9eb-8096fd61ebba"
@@ -32,7 +32,7 @@
       "2026-10-22T12:02:17.255Z"
     ],
     "notices": [
-      "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/4: External details could not be read; no external status or content was verified."
+      "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/4: External details could not be read; no external status or content was verified."
     ]
   }
 ]
