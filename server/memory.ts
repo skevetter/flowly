@@ -41,7 +41,7 @@ import type { BoardStore } from "./store";
 import type { SummaryStore } from "./summaries";
 import { runSummaryModels } from "./summary-models";
 import { backgroundWorkspaces, type BackgroundWorkspaces } from "./background-workspace";
-import { daemonRemoveAgent, type RemoveAgent } from "./summarizer-remove";
+import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import { logFailure } from "./error-report";
 
 const DAY_MS = 86_400_000;
@@ -198,7 +198,7 @@ export class MemoryService {
     private delayMs = RETRO_DELAY_MS,
     private timeoutMs = RETRO_TIMEOUT_MS,
     /** Hard-deletes the review's child session when done; archives it if that fails (AGENTS.md exception, §4.2). */
-    private removeAgent: RemoveAgent = daemonRemoveAgent(),
+    private removeAgent: RemoveAgent = archiveRemovedAgent,
     /** Where the review runs: the project's background workspace, never a card's (§4.2). */
     private background: BackgroundWorkspaces = backgroundWorkspaces(board.directory),
   ) {

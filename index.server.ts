@@ -3,12 +3,11 @@ import type { PluginServerContext } from "@getpaseo/plugin/server";
 import type { PaseoApi } from "@getpaseo/client";
 import { BoardStore, columnOrder } from "./server/store";
 import { BoardService, dataDirectory, migrateLegacyPluginData, paseoHome } from "./server/service";
-import { readPaseoVersion } from "./server/paseo-version";
 import { NativeDirectoryPicker, detectNativePicker, listDirectories } from "./server/directories";
 import * as rpc from "./shared/rpc";
 import { agentHabitsOn, developerSettings, performanceLogOn, performanceSettings, boardViewSettings, ideasSettings, languageSettings, languageSettingsValues, aiLanguageSettings, aiLanguageSettingsValues, deviceLanguageSettings, deviceLanguageValue, modelSettings, onboardingSettings, ideasSettingsValues, statusSettings, statusSettingsValues, wrapupSettings, wrapupSettingsValues, nativeSessionSettings, nativeSessionSettingsValues, featureSettings, featureSettingsValues, telemetrySettings, telemetrySettingsValues } from "./shared/settings";
 import { ToolServer } from "./server/tool-server";
-import { SessionReadStore, SessionReadService, daemonNativeAttention } from "./server/session-reads";
+import { SessionReadStore, SessionReadService } from "./server/session-reads";
 import { readAttentionCount } from "./server/attention-count";
 import { WrapupService } from "./server/wrapup";
 import { WorkspaceRestoreService } from "./server/workspace-restore";
@@ -220,7 +219,7 @@ export default function contribute(host: PluginServerContext) {
     return { path: snapshotPath(project.primaryPath), savedAt: state?.savedAt ?? "", error: state?.error ?? "" };
   });
   const sessionReads = new SessionReadStore(store.directory);
-  const readService = new SessionReadService(store, sessionReads, daemonNativeAttention());
+  const readService = new SessionReadService(store, sessionReads);
   // Sessions read in Flowly before read state synced (or whose sync failed) are
   // cleared in Paseo too; retried once if the daemon is not reachable yet.
   const syncReads = (retry: boolean) =>
@@ -662,7 +661,6 @@ export default function contribute(host: PluginServerContext) {
     directory: store.directory,
     env: process.env,
     destination: async () => ready(await telemetryPrefs.read(), telemetrySettingsValues),
-    paseoVersion: () => readPaseoVersion(paseoHome()),
     enabled: async () => ready(await telemetryPrefs.read().catch(() => null), telemetrySettingsValues).enabled,
     snapshot: async () => {
       const [language, device, ai, ideasState, nativeState, wrapState, features, workflowState, summary, autoStatus, board] = await Promise.all([

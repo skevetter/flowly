@@ -22,7 +22,7 @@ import {
   type SummarySettings,
   type SummaryState,
 } from "../shared/summary";
-import { daemonRemoveAgent, type RemoveAgent } from "./summarizer-remove";
+import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import { runSummaryModels } from "./summary-models";
 import { logFailure } from "./error-report";
 export { availableModels } from "./summary-models";
@@ -168,7 +168,7 @@ export class SummaryService {
     readonly language: () => Promise<LocaleCode>,
     private timeoutMs = SUMMARY_TIMEOUT_MS,
     private rowTimeoutMs = SUMMARY_ROW_TIMEOUT_MS,
-    private remove: RemoveAgent = daemonRemoveAgent(),
+    private remove: RemoveAgent = archiveRemovedAgent,
   ) {}
 
   running() {

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { PaseoApi } from "@getpaseo/client";
 import { z } from "zod";
 import type { Project } from "../shared/model";
-import { daemonWorkspaceRecovery, type WorkspaceRecovery } from "./workspace-restore";
+import { unavailableWorkspaceRecovery, type WorkspaceRecovery } from "./workspace-restore";
 import { logFailure } from "./error-report";
 
 export const BACKGROUND_TITLE = "Flowly background";
@@ -13,12 +13,8 @@ export const BACKGROUND_TITLE = "Flowly background";
 export type Revival = "live" | "restored" | "gone";
 export type Revive = (workspaceId: string) => Promise<Revival>;
 
-/**
- * COMPAT(sdk-workspace-restore): the SDK cannot restore an archived workspace, so
- * this goes over the same short-lived local connection as WORKSPACE-RESTORE-SPEC.
- * Anything Paseo cannot bring back (removed, unreachable) counts as gone: a new one is made.
- */
-export function daemonRevive(recovery: WorkspaceRecovery = daemonWorkspaceRecovery()): Revive {
+/** Anything Paseo cannot bring back (removed, unreachable, no restore call in the SDK) counts as gone: a new one is made. */
+export function daemonRevive(recovery: WorkspaceRecovery = unavailableWorkspaceRecovery): Revive {
   return async (workspaceId) => {
     const daemon = await recovery.connect();
     try {

@@ -10,8 +10,6 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { PaseoApi } from "@getpaseo/client";
 import { BoardStore } from "./store";
-import { openLocalDaemon } from "./local-daemon";
-import { paseoHome } from "./service";
 import {
   nativeAttentionToken,
   type AttentionAgent,
@@ -165,38 +163,6 @@ export interface NativeAttentionConnection {
 }
 export interface NativeAttention {
   connect(): Promise<NativeAttentionConnection>;
-}
-
-/**
- * COMPAT(sdk-local-daemon): `PaseoApi` cannot clear a session's attention in
- * @getpaseo/client 0.11.2; the daemon serves `clear_agent_attention`. Use a
- * short-lived local connection until the SDK exposes it (SESSION-ATTENTION-SPEC).
- */
-export function daemonNativeAttention(home = paseoHome()): NativeAttention {
-  return {
-    async connect() {
-      const client = await openLocalDaemon(
-        home,
-        "flowly-session-reads",
-        ["clearAgentAttention", "fetchAgents"],
-        "This Paseo version cannot sync read state.",
-      );
-      return {
-        async agents() {
-          const found: AttentionAgent[] = [];
-          let cursor: string | undefined;
-          do {
-            const page = await client.fetchAgents({ page: { limit: 200, cursor } });
-            for (const { agent } of page.entries) found.push(agent as AttentionAgent);
-            cursor = page.pageInfo.nextCursor ?? undefined;
-          } while (cursor);
-          return found;
-        },
-        clear: (ids) => client.clearAgentAttention(ids),
-        close: () => client.close().catch(() => undefined),
-      };
-    },
-  };
 }
 
 /**

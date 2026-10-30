@@ -1044,12 +1044,8 @@ function TaskDrawerView({
                     {wrapped
                       ? t(
                           /(^|; )workspace kept(;|$)/.test(wrapped.note || "")
-                            ? task.status === "done"
-                              ? "Sessions archived {time}. Move the card out of Done to bring them back."
-                              : "Sessions archived {time}. Move the card out of Cancelled to bring them back."
-                            : task.status === "done"
-                              ? "Workspace and sessions archived {time}. Move the card out of Done to bring them back."
-                              : "Workspace and sessions archived {time}. Move the card out of Cancelled to bring them back.",
+                            ? "Sessions archived {time}."
+                            : "Workspace and sessions archived {time}.",
                           { time: relativeTime(wrapped.at) },
                         )
                       : t("Wrap up to archive its sessions, worktree and the card.")}

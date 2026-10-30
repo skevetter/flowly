@@ -1,5 +1,7 @@
 # Restore a wrapped-up card's workspace and sessions when it leaves Done/Cancelled
 
+> Superseded 2026-10-30 (issue #1): Flowly no longer reads the Paseo local credential, so restore and session unarchive are unavailable until the SDK exposes them. A reopen records `workspace_restore_skipped` with the reason. The behavior below applies once the SDK offers the calls.
+
 Status: the user requested this on 2026-10-15 and chose option A, a temporary direct daemon connection. Their words: "按A试一下，并进行测试，如果通过就先这么用，记录着，以后SDK支持了的话再改方案". Upstream: [MULTITASK-SPEC](MULTITASK-SPEC.md) (wrap-up, auto wrap-up).
 
 ## Behavior
@@ -31,14 +33,9 @@ Status: the user requested this on 2026-10-15 and chose option A, a temporary di
 
 `@getpaseo/client` 0.11.2 gives plugins `PaseoApi.workspaces` with only list/open/create/archive. Its agent handle `refresh()` only re-fetches; it does not unarchive. The `paseo` CLI has no restore command either. The daemon does serve `workspace.recovery.inspect/restore` and agent refresh, and `DaemonClient` exposes them as `inspectWorkspaceRecovery` / `restoreWorkspace` / `refreshAgent`.
 
-Until the SDK exposes restore, `server/workspace-restore.ts` connects the way the `paseo` CLI does:
+`server/workspace-restore.ts` defines the `WorkspaceRecovery` seam (inspect, restore, list archived sessions, revive). Until the SDK exposes these calls the default implementation is `unavailableWorkspaceRecovery`, which fails with a clear message and the reopen records `workspace_restore_skipped`. The status change itself is unaffected.
 
-1. Read `listen` from `$PASEO_HOME/paseo.pid` (default `~/.paseo`) and resolve it as the `paseo` CLI does (Paseo 0.13 `resolveDaemonTarget`, `daemonTarget` in `server/local-daemon.ts`): `host:port`, a bare port, `tcp://host:port`, a Unix socket (`/path`, `~/path`, `unix://path`) or a Windows named pipe (`\\.\pipe\name`, `pipe://name`). Sockets and pipes are opened with `net.connect` and spoken to through the bundled `ws` package, because Node's built-in WebSocket cannot use them (Linux and Windows desktop installs listen on a socket or pipe; TCP-only support made every local connection fail there, found in telemetry 2026-10-27). An empty `listen` means Paseo's supervisor is restarting the daemon: `LocalDaemonUnavailable`, like a missing credential; both are logged, not reported (TELEMETRY-SPEC §11.2).
-2. Read the local credential from `$PASEO_HOME/local-credential`. The daemon accepts it only for the address it listens on.
-3. Open a short-lived `DaemonClient` (`@getpaseo/client/internal/daemon-client`, bundled from the pinned version) with `localCredential`. Inspect the workspace, restore it, list archived sessions (`fetchAgents`) and refresh the chosen ones, all on one connection, closed in `finally`. The token is never logged or returned.
-4. If the connection or methods are missing, record `workspace_restore_skipped`. The status change itself is unaffected.
-
-This departs from "use the supplied Paseo SDK"; AGENTS.md lists it as an explicit, temporary exception. **When the SDK exposes workspace restore**, replace `daemonWorkspaceRecovery` with the SDK calls (workspace restore, session unarchive). Keep `WorkspaceRecovery` / `RecoveryConnection` as the seam: tests inject a fake, so only the transport changes. Then delete the credential/pid reading and this section.
+This departs from "use the supplied Paseo SDK"; AGENTS.md lists it as an explicit, temporary exception. **When the SDK exposes workspace restore**, replace `unavailableWorkspaceRecovery` with the SDK calls (workspace restore, session unarchive). Keep `WorkspaceRecovery` / `RecoveryConnection` as the seam: tests inject a fake, so only the transport changes. Then delete the credential/pid reading and this section.
 
 ## Acceptance
 

@@ -1,5 +1,7 @@
 # Session counts and review state on task cards
 
+> Superseded 2026-10-30 (issue #1): clearing native Paseo attention is unavailable without the local credential. Mark as read stays in Flowly.
+
 Status: implementation authorized by the user's request to show session completion, running and unread counts on Kanban cards. This adds session review metadata to the current session UI; the single-root and Phase 2 business-status contracts remain in force.
 
 ## 1. Capability and scope

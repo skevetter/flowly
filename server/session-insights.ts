@@ -1,4 +1,4 @@
-import { daemonRemoveAgent, type RemoveAgent } from "./summarizer-remove";
+import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import { copyFile, mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -114,7 +114,7 @@ export class SessionInsightService {
     readonly language: () => Promise<LocaleCode>,
     private timeoutMs = INSIGHT_TIMEOUT_MS,
     private rowTimeoutMs = ROW_TIMEOUT_MS,
-    private remove: RemoveAgent = daemonRemoveAgent(),
+    private remove: RemoveAgent = archiveRemovedAgent,
   ) {}
 
   running() {

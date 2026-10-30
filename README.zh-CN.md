@@ -129,6 +129,16 @@ Insights 用 GitHub 式的热力图显示项目一年的活跃度：每天一格
 
 看板数据存放在 daemon 所在机器的 `~/.paseo/plugin-data/flowly/`（`PASEO_HOME` 可指定 daemon 主目录）：Paseo 支持时存在本地 SQLite 数据库 `flowly.sqlite` 里，否则存在 `board.json`。*Settings → Storage* 显示存放位置，每天备份一次（保留最近 7 份），可恢复备份或把看板导出为 JSON。写入串行化并原子替换，过期编辑会被拒绝，无效文件会被保留而不是重置。移除或永久删除 project / 卡片前会先备份到 `removed/`。归档插件记录不会删除 Paseo 资源或磁盘目录。工具服务只监听本机回环地址，每个 session 使用独立的私有凭据。
 
+### Flowly 不发起的调用
+
+Flowly 不读取 Paseo daemon 凭据（`~/.paseo/local-credential`），也不另开 daemon 连接。插件 SDK 没有下列调用，所以这些功能不可用：
+
+- 卡片移出 Done 或 Cancelled 时恢复已归档的 workspace 并取消归档其会话。重新打开时会记录跳过恢复及原因；请在 Paseo 中恢复 workspace。
+- 清除会话在 Paseo 中的原生未读标记。标记已读只在 Flowly 内生效。
+- 硬删除临时的摘要、洞察和记忆复盘会话，改为归档。
+- 复用已归档的后台 workspace，改为新建。
+- 错误报告中的 Paseo 版本，`paseo_version` 为空。
+
 ### 遥测
 
 遥测默认关闭，在 设置 → General → *Send anonymous usage data* 打开并在 `telemetry` 插件设置里填写兼容 PostHog capture API 的 `apiKey` 和 `endpoint` 之前不会发送任何数据。打开后，daemon 每天向该地址发送一次匿名使用数据：Flowly 版本、操作系统和 Node 版本、界面语言、开启了哪些功能、大致的项目数和卡片数，以及自上次以来新建的卡片、agent 回合、交付、下一步建议、ideas 和 memory 的次数和用到的模型。Flowly 的 daemon 出错时，还会发送错误的类型、错误码，以及出错位置在 Flowly 自身代码的哪个文件哪一行，同一种错误每天最多一次。不会发送错误消息、标题、描述、消息、你的路径（只发 Flowly 自身代码里的文件路径）、仓库名，也不会发送项目、卡片或 session 的 ID，不做基于 IP 的定位。给 Paseo daemon 设置 `DO_NOT_TRACK=1`（或 `FLOWLY_TELEMETRY=0`）会无视设置强制关闭。具体发送哪些字段见 [`server/telemetry.ts`](server/telemetry.ts) 和 [docs/TELEMETRY-SPEC.md](docs/TELEMETRY-SPEC.md)。

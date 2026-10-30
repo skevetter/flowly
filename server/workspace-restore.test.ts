@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { BoardStore } from "./store";
-import { WorkspaceRestoreService, archivedByWrapup, type ArchivedSession, type RecoveryState } from "./workspace-restore";
+import { WorkspaceRestoreService, archivedByWrapup, unavailableWorkspaceRecovery, workspaceRecoveryUnavailable, type ArchivedSession, type RecoveryState } from "./workspace-restore";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -119,6 +119,9 @@ test("unrecoverable or unreachable workspaces record why; a live workspace is si
   const offline = await setup({ events: [wrapped], connectError: new Error("connect ECONNREFUSED") });
   await offline.service.restoreAfterReopen("t");
   expect((await offline.store.read()).events.at(-1)?.note).toMatch(/Could not reach Paseo: connect ECONNREFUSED/);
+  const noSdkCall = await setup({ events: [wrapped] });
+  await new WorkspaceRestoreService(noSdkCall.store, unavailableWorkspaceRecovery).restoreAfterReopen("t");
+  expect((await noSdkCall.store.read()).events.at(-1)).toMatchObject({ action: "workspace_restore_skipped", note: workspaceRecoveryUnavailable });
   const failed = await setup({ events: [wrapped], restoreError: new Error("branch missing") });
   await failed.service.restoreAfterReopen("t");
   expect((await failed.store.read()).events.at(-1)?.note).toMatch(/Restoring failed: branch missing/);

@@ -1,7 +1,6 @@
-import { openLocalDaemon } from "./local-daemon";
+import { LocalDaemonUnavailable } from "./local-daemon";
 import type { BoardStore } from "./store";
 import type { BoardEvent } from "../shared/model";
-import { paseoHome } from "./service";
 import { isSummarizer } from "../shared/summary";
 
 /** Paseo's answer to "can this archived workspace come back?". */
@@ -24,53 +23,13 @@ export interface WorkspaceRecovery {
   connect(): Promise<RecoveryConnection>;
 }
 
-/**
- * COMPAT(sdk-workspace-restore): the plugin SDK (`PaseoApi`) has no workspace
- * restore or session unarchive in @getpaseo/client 0.11.2, but the daemon
- * serves `workspace.recovery.inspect/restore` and agent refresh (which
- * unarchives). Until the SDK exposes them, use a short-lived local connection
- * (`openLocalDaemon`). Replace with the SDK calls once they exist
- * (WORKSPACE-RESTORE-SPEC).
- */
-export function daemonWorkspaceRecovery(home = paseoHome()): WorkspaceRecovery {
-  return {
-    async connect() {
-      const client = await openLocalDaemon(
-        home,
-        "flowly-restore",
-        ["inspectWorkspaceRecovery", "restoreWorkspace", "fetchAgents", "fetchAgent", "refreshAgent"],
-        "This Paseo version cannot restore workspaces.",
-      );
-      return {
-        inspect: (id) => client.inspectWorkspaceRecovery(id) as Promise<RecoveryState>,
-        restore: (id) => client.restoreWorkspace(id),
-        async archivedSessions(workspaceId) {
-          const found: ArchivedSession[] = [];
-          let cursor: string | undefined;
-          do {
-            const page = await client.fetchAgents({ filter: { includeArchived: true }, page: { limit: 200, cursor } });
-            for (const { agent } of page.entries)
-              if (agent.workspaceId === workspaceId && agent.archivedAt)
-                found.push({ id: agent.id, archivedAt: agent.archivedAt, labels: agent.labels ?? {} });
-            cursor = page.pageInfo.nextCursor ?? undefined;
-          } while (cursor);
-          return found;
-        },
-        async reviveSession(id) {
-          try {
-            await client.refreshAgent(id);
-          } catch (e) {
-            // Refresh unarchives before reloading; a session that never ran has
-            // nothing to reload but is back all the same.
-            const now = await client.fetchAgent(id).catch(() => null);
-            if (!now || now.agent.archivedAt) throw e;
-          }
-        },
-        close: () => client.close().catch(() => undefined),
-      };
-    },
-  };
-}
+export const workspaceRecoveryUnavailable = "Restoring workspaces and sessions needs a Paseo SDK call that does not exist yet.";
+
+export const unavailableWorkspaceRecovery: WorkspaceRecovery = {
+  async connect() {
+    throw new LocalDaemonUnavailable(workspaceRecoveryUnavailable);
+  },
+};
 
 const finished = (status: string) => status === "done" || status === "cancelled";
 
@@ -116,7 +75,7 @@ export function sessionsArchivedByWrapup(events: BoardEvent[], taskId: string, s
 export class WorkspaceRestoreService {
   constructor(
     readonly store: BoardStore,
-    readonly recovery: WorkspaceRecovery = daemonWorkspaceRecovery(),
+    readonly recovery: WorkspaceRecovery = unavailableWorkspaceRecovery,
   ) {}
 
   private readonly runs = new Map<string, Promise<void>>();
@@ -148,7 +107,7 @@ export class WorkspaceRestoreService {
     try {
       daemon = await this.recovery.connect();
     } catch (e) {
-      if (ours) await record("workspace_restore_skipped", `Could not reach Paseo: ${message(e)}`);
+      if (ours) await record("workspace_restore_skipped", e instanceof LocalDaemonUnavailable ? message(e) : `Could not reach Paseo: ${message(e)}`);
       return;
     }
     try {
