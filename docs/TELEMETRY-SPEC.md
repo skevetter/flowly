@@ -207,7 +207,7 @@ Content-Type: application/json
 
 ## 9. 验收标准
 
-1. 开关为开、距上次成功发送超过 20 h 时，daemon 启动 5 分钟后发出**恰好一个**请求：发往 `https://us.i.posthog.com/i/v0/e/`，`event = flowly_heartbeat`，`properties` 的键集合与第 4 节完全一致。用 fetch 桩加单元测试断言键集合，任何多出来的键都判失败。
+1. 开关为开、距上次成功发送超过 20 h 时，daemon 启动 5 分钟后发出**恰好一个**请求：发往 `telemetry` 设置里配置的 `endpoint`，`event = flowly_heartbeat`，`properties` 的键集合与第 4 节完全一致。用 fetch 桩加单元测试断言键集合，任何多出来的键都判失败。
 2. 用户还没看过导览或 What's new 时，只要开关为开，照常发送。
 3. 关闭开关后，之后的每次检查都没有任何请求；重新打开后恢复发送，并沿用原来的 `installId`。
 4. `DO_NOT_TRACK=1`、`FLOWLY_TELEMETRY=0`、`NODE_ENV=test` 三种情况各自都没有任何请求，设置页显示强制关闭的状态。
