@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-10-22T11:46:42.588Z",
-  "repo": "JasprW/flowly-delivery-fixture-20261022-036d",
+  "repo": "owner/flowly-delivery-fixture-20261022-036d",
   "retainRepo": true,
   "projectId": "3db2ad5b-e6c4-4054-b2ed-a13a8dfa0663",
   "sessions": [
@@ -133,7 +133,7 @@
         "workspace": {
           "id": "wks_a642d5a0b1a21410",
           "kind": "worktree",
-          "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/test-delivery-sonnet-036d"
+          "directory": "/home/user/.paseo/worktrees/246o38bv/test-delivery-sonnet-036d"
         },
         "archiveWorkspace": true,
         "sessions": 1,
@@ -149,7 +149,7 @@
       },
       "result": {
         "id": "f08fa850-f3f1-4e36-945a-b467dd96ff81",
-        "backup": "/Users/bofan.wang/.paseo/plugin-data/flowly/removed/task-f08fa850-f3f1-4e36-945a-b467dd96ff81-2026-10-22T12-02-33-392Z.json",
+        "backup": "/home/user/.paseo/plugin-data/flowly/removed/task-f08fa850-f3f1-4e36-945a-b467dd96ff81-2026-10-22T12-02-33-392Z.json",
         "archived": {
           "sessions": 1,
           "workspace": true
@@ -164,7 +164,7 @@
         "workspace": {
           "id": "wks_465957f35b46485b",
           "kind": "worktree",
-          "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/test-delivery-codex-036d"
+          "directory": "/home/user/.paseo/worktrees/246o38bv/test-delivery-codex-036d"
         },
         "archiveWorkspace": true,
         "sessions": 1,
@@ -180,7 +180,7 @@
       },
       "result": {
         "id": "7f8ec7bc-4de3-4a9a-9307-f005dcaef4c1",
-        "backup": "/Users/bofan.wang/.paseo/plugin-data/flowly/removed/task-7f8ec7bc-4de3-4a9a-9307-f005dcaef4c1-2026-10-22T12-02-34-989Z.json",
+        "backup": "/home/user/.paseo/plugin-data/flowly/removed/task-7f8ec7bc-4de3-4a9a-9307-f005dcaef4c1-2026-10-22T12-02-34-989Z.json",
         "archived": {
           "sessions": 1,
           "workspace": true
@@ -195,7 +195,7 @@
         "workspace": {
           "id": "wks_c9607d46e8dba3ed",
           "kind": "worktree",
-          "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/test-delivery-sonnet-r2-036d"
+          "directory": "/home/user/.paseo/worktrees/246o38bv/test-delivery-sonnet-r2-036d"
         },
         "archiveWorkspace": true,
         "sessions": 1,
@@ -211,7 +211,7 @@
       },
       "result": {
         "id": "952637b9-43a2-48c3-beb1-11b6c078cd85",
-        "backup": "/Users/bofan.wang/.paseo/plugin-data/flowly/removed/task-952637b9-43a2-48c3-beb1-11b6c078cd85-2026-10-22T12-02-36-226Z.json",
+        "backup": "/home/user/.paseo/plugin-data/flowly/removed/task-952637b9-43a2-48c3-beb1-11b6c078cd85-2026-10-22T12-02-36-226Z.json",
         "archived": {
           "sessions": 1,
           "workspace": true
@@ -226,7 +226,7 @@
         "workspace": {
           "id": "wks_4db5ada5210e53bf",
           "kind": "worktree",
-          "directory": "/Users/bofan.wang/.paseo/worktrees/246o38bv/test-delivery-codex-r2-036d"
+          "directory": "/home/user/.paseo/worktrees/246o38bv/test-delivery-codex-r2-036d"
         },
         "archiveWorkspace": true,
         "sessions": 1,
@@ -242,7 +242,7 @@
       },
       "result": {
         "id": "e4bf0bf8-2e4e-48db-b6b8-74a3086818b3",
-        "backup": "/Users/bofan.wang/.paseo/plugin-data/flowly/removed/task-e4bf0bf8-2e4e-48db-b6b8-74a3086818b3-2026-10-22T12-03-17-624Z.json",
+        "backup": "/home/user/.paseo/plugin-data/flowly/removed/task-e4bf0bf8-2e4e-48db-b6b8-74a3086818b3-2026-10-22T12-03-17-624Z.json",
         "archived": {
           "sessions": 1,
           "workspace": true

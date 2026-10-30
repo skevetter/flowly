@@ -6,7 +6,7 @@
       "id": "invalid-sonnet",
       "cardId": "",
       "model": "claude-sonnet-5-5",
-      "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+      "repository": "owner/flowly-delivery-fixture-20261022-036d",
       "filename": "",
       "turns": [
         {
@@ -31,7 +31,7 @@
       "id": "invalid-gpt",
       "cardId": "",
       "model": "gpt-6-luna",
-      "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+      "repository": "owner/flowly-delivery-fixture-20261022-036d",
       "filename": "",
       "turns": [
         {

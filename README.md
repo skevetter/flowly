@@ -186,6 +186,10 @@ To add or change text, wrap it in `t()` / `tn()` and add the translation to ever
 
 Root code is limited to `index.client.tsx` and `index.server.ts`; everything else lives in `client/`, `server/` and runtime-neutral `shared/`. Design decisions, specs and acceptance evidence are in [`docs/`](docs/): start with [`SPEC-OUTLINE.md`](docs/SPEC-OUTLINE.md), [`SINGLE-ROOT-SPEC.md`](docs/SINGLE-ROOT-SPEC.md) and [`PROGRESS.md`](docs/PROGRESS.md). Project rules for contributors and agents are in [`AGENTS.md`](AGENTS.md). Release and promo material (copy, demo project script, screenshot script) lives in [`docs/promo/`](docs/promo/README.md).
 
+## Verification folder
+
+`docs/verification` is historical. It keeps only the saved constraint-benchmark evidence that `benchmarks/constraints/*.checks.mjs` replays, with personal paths, account names and hostnames replaced. Older reports and screenshots, including those for removed behavior, were deleted and stay in git history. Specs may still cite deleted report paths.
+
 ## License
 
 [MIT](LICENSE) © 2026 Bofan Wang

@@ -1,5 +1,5 @@
 
- RUN  v4.1.11 /Users/bofan.wang/Developer/personal/paseo-utlra-kanban
+ RUN  v4.1.11 /home/user/flowly
 
 stderr | server/tool-server.test.ts > MCP initialize/list can precede actor creation; live calls require SDK context
 responseMode: 'json' drops mid-call notifications. subscriptions/listen streams are always served over SSE regardless; other notifications emitted before a result are dropped.

@@ -17,13 +17,13 @@
   ],
   "prs": [
     {
-      "url": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/6",
+      "url": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/6",
       "state": "MERGED",
       "head": "bf5f3f65d30ff46cd3914d0eedbc97554097f5b9",
       "mergeCommit": "2e2b9bdd0855f61765effbfd9cbc56018d256633"
     },
     {
-      "url": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/7",
+      "url": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/7",
       "state": "MERGED",
       "head": "39321682c6aa8320cf1f9aeceabdd263cc3134cc",
       "mergeCommit": "5bfb3b9cca6ee58171ed40953c6747a33932807d"

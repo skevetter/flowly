@@ -3,7 +3,7 @@
 > vitest run --exclude 'docs/verification/**'
 
 
- RUN  v4.1.11 /Users/bofan.wang/Developer/personal/paseo-utlra-kanban
+ RUN  v4.1.11 /home/user/flowly
 
 
  Test Files  109 passed (109)

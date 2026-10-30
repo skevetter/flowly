@@ -2,7 +2,7 @@
   "at": "2026-10-22T11:52:34.233798+00:00",
   "state": {
     "startedAt": "2026-10-22T11:46:42.588Z",
-    "repo": "JasprW/flowly-delivery-fixture-20261022-036d",
+    "repo": "owner/flowly-delivery-fixture-20261022-036d",
     "retainRepo": true,
     "projectId": "3db2ad5b-e6c4-4054-b2ed-a13a8dfa0663",
     "sessions": [
@@ -649,7 +649,7 @@
         "note": "已提交文件并推送到批准的 fixture 仓库，创建 PR #1 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。",
         "outputs": [
           {
-            "target": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1",
+            "target": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1",
             "title": "PR #1 (已合并)",
             "note": "squash 合入 main，6f0a606"
           }
@@ -667,7 +667,7 @@
       "input": {
         "status": "in_review",
         "note": "已提交文件并推送到批准的 fixture 仓库，创建 PR #1 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。",
-        "outputs": "[{\"target\":\"https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1\",\"title\":\"PR #1 (已合并)\",\"note\":\"squash 合入 main，6f0a606\"}]"
+        "outputs": "[{\"target\":\"https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1\",\"title\":\"PR #1 (已合并)\",\"note\":\"squash 合入 main，6f0a606\"}]"
       }
     },
     {
@@ -676,7 +676,7 @@
       "tool": "mcp__flowly__flowly_update_status",
       "input": {
         "status": "in_review",
-        "note": "已提交文件并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。",
+        "note": "已提交文件并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。",
         "outputs": []
       },
       "error": {
@@ -690,7 +690,7 @@
       "tool": "mcp__flowly__flowly_update_status",
       "input": {
         "status": "in_review",
-        "note": "已提交文件并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。",
+        "note": "已提交文件并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。",
         "outputs": "[]"
       }
     },
@@ -718,7 +718,7 @@
       "tool": "mcp__flowly__flowly_update_status",
       "input": {
         "status": "in_review",
-        "note": "已提交文件(4fec26d)并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。检查已在新 HEAD 上重跑通过。",
+        "note": "已提交文件(4fec26d)并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。检查已在新 HEAD 上重跑通过。",
         "outputs": []
       },
       "receipt": {
@@ -735,7 +735,7 @@
       "tool": "mcp__flowly__flowly_update_status",
       "input": {
         "status": "in_review",
-        "note": "已提交文件(4fec26d)并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。检查已在新 HEAD 上重跑通过。",
+        "note": "已提交文件(4fec26d)并推送到批准的 fixture 仓库，创建 PR #1 (https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1) 并 squash 合入 main（合并提交 6f0a606）。未添加 remote、未改仓库配置。PR 链接无法登记为产物（Flowly 账号无法访问该私有仓库），故写在此处。检查已在新 HEAD 上重跑通过。",
         "outputs": "[]"
       }
     },
@@ -889,9 +889,9 @@
       "id": "f08fa850-f3f1-4e36-945a-b467dd96ff81",
       "projectId": "3db2ad5b-e6c4-4054-b2ed-a13a8dfa0663",
       "workspaceId": "wks_a642d5a0b1a21410",
-      "sourcePath": "/Users/bofan.wang/Developer/personal/flowly-test/tinylink",
+      "sourcePath": "/home/user/Developer/personal/flowly-test/tinylink",
       "repoPaths": [
-        "/Users/bofan.wang/Developer/personal/flowly-test/tinylink"
+        "/home/user/Developer/personal/flowly-test/tinylink"
       ],
       "title": "Delivery fixture · sonnet · 036d",
       "description": "Test-only documentation change. Create docs/flowly-delivery-sonnet-036d.txt with one short sentence identifying this as a Flowly delivery test, verify it is nonempty, and deliver for review. Leave the file uncommitted for the next user instruction. Do not edit any other files.",
@@ -917,9 +917,9 @@
       "id": "7f8ec7bc-4de3-4a9a-9307-f005dcaef4c1",
       "projectId": "3db2ad5b-e6c4-4054-b2ed-a13a8dfa0663",
       "workspaceId": "wks_465957f35b46485b",
-      "sourcePath": "/Users/bofan.wang/Developer/personal/flowly-test/tinylink",
+      "sourcePath": "/home/user/Developer/personal/flowly-test/tinylink",
       "repoPaths": [
-        "/Users/bofan.wang/Developer/personal/flowly-test/tinylink"
+        "/home/user/Developer/personal/flowly-test/tinylink"
       ],
       "title": "Delivery fixture · codex · 036d",
       "description": "Test-only documentation change. Create docs/flowly-delivery-codex-036d.txt with one short sentence identifying this as a Flowly delivery test, verify it is nonempty, and deliver for review. Leave the file uncommitted for the next user instruction. Do not edit any other files.",
@@ -987,7 +987,7 @@
         },
         {
           "id": "verify-the-file-is-nonem",
-          "text": "Commit and push the requested file to JasprW/flowly-delivery-fixture-20261022-036d using the explicit URL, without adding a Git remote.",
+          "text": "Commit and push the requested file to owner/flowly-delivery-fixture-20261022-036d using the explicit URL, without adding a Git remote.",
           "done": true,
           "by": "agent",
           "at": "2026-10-22T11:51:31.085Z"
@@ -1026,7 +1026,7 @@
         {
           "id": "confirm-the-pr-is-merged",
           "text": "Confirm the PR is merged.",
-          "command": "gh pr view 2 --repo JasprW/flowly-delivery-fixture-20261022-036d --json url,state,mergedAt",
+          "command": "gh pr view 2 --repo owner/flowly-delivery-fixture-20261022-036d --json url,state,mergedAt",
           "state": "pass",
           "sha": "63b46546a360",
           "ranAt": "2026-10-22T11:51:56.534Z",
@@ -1037,8 +1037,8 @@
       ],
       "confusions": [],
       "env": {
-        "host": "bofan-laptop",
-        "path": "/Users/bofan.wang/.paseo/worktrees/246o38bv/test-delivery-codex-036d",
+        "host": "host",
+        "path": "/home/user/.paseo/worktrees/246o38bv/test-delivery-codex-036d",
         "head": {
           "sha": "63b46546a360",
           "branch": "test/delivery-codex-036d",
@@ -1108,8 +1108,8 @@
       ],
       "confusions": [],
       "env": {
-        "host": "bofan-laptop",
-        "path": "/Users/bofan.wang/.paseo/worktrees/246o38bv/test-delivery-sonnet-036d",
+        "host": "host",
+        "path": "/home/user/.paseo/worktrees/246o38bv/test-delivery-sonnet-036d",
         "head": {
           "sha": "4fec26d129f9",
           "branch": "test/delivery-sonnet-036d",

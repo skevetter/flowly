@@ -4,9 +4,9 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { connect } from './connect.mjs';
 const stateFile = new URL('./live-state.json', import.meta.url);
-const root = '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban';
+const root = '/home/user/flowly';
 const projectId = '3db2ad5b-e6c4-4054-b2ed-a13a8dfa0663';
-const repo = 'JasprW/flowly-delivery-fixture-20261022-036d';
+const repo = 'owner/flowly-delivery-fixture-20261022-036d';
 const parent = '036d5d2b-d2b0-4b54-9ef7-d80c04a0896f';
 const save = (s) => writeFile(stateFile, JSON.stringify(s, null, 2) + '\n');
 const x = await connect();
@@ -16,7 +16,7 @@ try {
     const existing = await readFile(stateFile, 'utf8').catch(() => null);
     if (existing) throw new Error('State exists: do not recreate fixtures.');
     const board = await x.rpc('board.read', {});
-    const state = { startedAt: new Date().toISOString(), repo, retainRepo: true, projectId, sessions: [], cards: [], before: board.tasks.filter(t => t.projectId === projectId).map(t => ({ id: t.id, revision: t.revision, status: t.status, workspaceId: t.workspaceId })), sourceHead: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: '/Users/bofan.wang/Developer/personal/flowly-test/tinylink', encoding: 'utf8' }).trim() };
+    const state = { startedAt: new Date().toISOString(), repo, retainRepo: true, projectId, sessions: [], cards: [], before: board.tasks.filter(t => t.projectId === projectId).map(t => ({ id: t.id, revision: t.revision, status: t.status, workspaceId: t.workspaceId })), sourceHead: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: '/home/user/Developer/personal/flowly-test/tinylink', encoding: 'utf8' }).trim() };
     await save(state);
     // Independent Luna review owns only its evidence; it must not implement or rerun broad suites.
     const auditId = randomUUID();

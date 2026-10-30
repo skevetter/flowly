@@ -69,9 +69,7 @@ Only B01 is implemented; extra providers, B02–B04, automatic resume, compariso
 commands and dashboards are outside this implementation.
 
 
-Implementation checks and live coverage are tracked in the
-[verification report](../../docs/verification/constraint-benchmark-2026-10-22/implementation-report.md).
-The first live attempt and incomplete two-model result remain recorded. A provider
+A provider
 quota is INVALID, not a model compliance failure. Native replay timestamps do not
 establish action time: phase checks use ordered successful contexts/receipts.
 Versioned report names include both the loaded grader hash and facts hash.

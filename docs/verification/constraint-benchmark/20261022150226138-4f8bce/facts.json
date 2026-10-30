@@ -6,9 +6,9 @@
       "id": "d1ec6025-c302-42e6-819e-1e479b388f17",
       "cardId": "133dea58-d78a-41b4-b3f0-764fc95ebac2",
       "model": "claude-sonnet-5-5",
-      "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+      "repository": "owner/flowly-delivery-fixture-20261022-036d",
       "filename": "docs/bench-constraints-20261022150226138-4f8bce-sonnet.txt",
-      "checkCommand": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/sonnet/check.mjs'",
+      "checkCommand": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/sonnet/check.mjs'",
       "checkId": "bench-constraints-20261022150226138-4f8bce-sonnet",
       "turns": [
         {
@@ -139,9 +139,9 @@
       "id": "44f67118-24ed-4f2f-9648-6730bb49c1df",
       "cardId": "13878a8f-7851-4d1d-8cbb-c2ff367bfbd0",
       "model": "gpt-6-luna",
-      "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+      "repository": "owner/flowly-delivery-fixture-20261022-036d",
       "filename": "docs/bench-constraints-20261022150226138-4f8bce-gpt.txt",
-      "checkCommand": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+      "checkCommand": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
       "checkId": "bench-constraints-20261022150226138-4f8bce-gpt",
       "turns": [
         {
@@ -623,7 +623,7 @@
                     ],
                     "validation": [
                       {
-                        "id": "node-users-bofan-wang-de",
+                        "id": "node-users-user-de",
                         "state": "unrun"
                       }
                     ]
@@ -762,7 +762,7 @@
                     ],
                     "validation": [
                       {
-                        "id": "node-users-bofan-wang-de",
+                        "id": "node-users-user-de",
                         "state": "unrun"
                       }
                     ]
@@ -843,7 +843,7 @@
                     ],
                     "validation": [
                       {
-                        "id": "node-users-bofan-wang-de",
+                        "id": "node-users-user-de",
                         "state": "unrun"
                       }
                     ]
@@ -865,7 +865,7 @@
               "status": "completed",
               "name": "shell",
               "kind": "check",
-              "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+              "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
               "exitCode": 0,
               "input": {},
               "receipts": [],
@@ -943,7 +943,7 @@
                     ],
                     "validation": [
                       {
-                        "id": "node-users-bofan-wang-de",
+                        "id": "node-users-user-de",
                         "state": "unrun"
                       }
                     ]
@@ -1079,7 +1079,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -1183,7 +1183,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -1441,7 +1441,7 @@
               "validation": [
                 {
                   "id": "fixture",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "47899f7286df",
                   "dirty": true
@@ -1707,7 +1707,7 @@
               "validation": [
                 {
                   "id": "fixture",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "47899f7286df",
                   "dirty": true
@@ -1979,7 +1979,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -2071,7 +2071,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -2170,7 +2170,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -2263,14 +2263,14 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
                       },
                       {
                         "id": "fixture-2",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -2352,14 +2352,14 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
                       },
                       {
                         "id": "fixture-2",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -2454,14 +2454,14 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
                       },
                       {
                         "id": "fixture-2",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -2628,14 +2628,14 @@
               "validation": [
                 {
                   "id": "fixture",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "47899f7286df",
                   "dirty": true
                 },
                 {
                   "id": "fixture-2",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "47899f7286df",
                   "dirty": true
@@ -3000,14 +3000,14 @@
               "validation": [
                 {
                   "id": "fixture",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "47899f7286df",
                   "dirty": true
                 },
                 {
                   "id": "fixture-2",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "47899f7286df",
                   "dirty": true
@@ -3429,14 +3429,14 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
                       },
                       {
                         "id": "fixture-2",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -3534,14 +3534,14 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
                       },
                       {
                         "id": "fixture-2",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -3684,14 +3684,14 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
                       },
                       {
                         "id": "fixture-2",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "47899f7286df",
                         "dirty": true
@@ -3794,7 +3794,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       },
@@ -3971,7 +3971,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       },
@@ -4074,7 +4074,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       },
@@ -4086,7 +4086,7 @@
                       },
                       {
                         "id": "pr",
-                        "command": "gh pr view 5 --repo JasprW/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
+                        "command": "gh pr view 5 --repo owner/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       }
@@ -4172,7 +4172,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       },
@@ -4184,7 +4184,7 @@
                       },
                       {
                         "id": "pr",
-                        "command": "gh pr view 5 --repo JasprW/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
+                        "command": "gh pr view 5 --repo owner/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       }
@@ -4284,7 +4284,7 @@
                     "validation": [
                       {
                         "id": "fixture",
-                        "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                        "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       },
@@ -4296,7 +4296,7 @@
                       },
                       {
                         "id": "pr",
-                        "command": "gh pr view 5 --repo JasprW/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
+                        "command": "gh pr view 5 --repo owner/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
                         "state": "pass",
                         "sha": "0b022ebb63c1"
                       }
@@ -4307,7 +4307,7 @@
                       "id": "39d6ddfa-2417-4475-b863-c04d810c8328",
                       "role": "output",
                       "kind": "url",
-                      "target": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/5",
+                      "target": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/5",
                       "createdBy": "agent"
                     },
                     {
@@ -4500,7 +4500,7 @@
               "validation": [
                 {
                   "id": "fixture",
-                  "command": "node '/Users/bofan.wang/Developer/personal/paseo-utlra-kanban/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
+                  "command": "node '/home/user/flowly/docs/verification/constraint-benchmark/20261022150226138-4f8bce/fixtures/gpt/check.mjs'",
                   "state": "pass",
                   "sha": "0b022ebb63c1"
                 },
@@ -4512,7 +4512,7 @@
                 },
                 {
                   "id": "pr",
-                  "command": "gh pr view 5 --repo JasprW/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
+                  "command": "gh pr view 5 --repo owner/flowly-delivery-fixture-20261022-036d --json number,url,state,mergedAt,mergeCommit,baseRefName,headRefName,files",
                   "state": "pass",
                   "sha": "0b022ebb63c1"
                 }
@@ -4533,7 +4533,7 @@
                 "taskId": "13878a8f-7851-4d1d-8cbb-c2ff367bfbd0",
                 "role": "output",
                 "kind": "url",
-                "target": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/5",
+                "target": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/5",
                 "createdBy": "agent",
                 "agentId": "44f67118-24ed-4f2f-9648-6730bb49c1df"
               }
@@ -4961,10 +4961,10 @@
           "complete": true,
           "prs": [
             {
-              "url": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/5",
+              "url": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/5",
               "state": "MERGED",
               "head": "0b022ebb63c120e8a7fcb0625cefa418d9833530",
-              "repository": "JasprW/flowly-delivery-fixture-20261022-036d",
+              "repository": "owner/flowly-delivery-fixture-20261022-036d",
               "files": [
                 "docs/bench-constraints-20261022150226138-4f8bce-gpt.txt"
               ],

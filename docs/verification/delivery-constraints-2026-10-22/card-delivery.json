@@ -19,7 +19,7 @@
     "status": "in_review",
     "at": "2026-10-22T12:10:41.560Z"
   },
-  "notice": "https://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/1: External details could not be read; no external status or content was verified.\nhttps://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/2: External details could not be read; no external status or content was verified.\nhttps://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/3: External details could not be read; no external status or content was verified.\nhttps://github.com/JasprW/flowly-delivery-fixture-20261022-036d/pull/4: External details could not be read; no external status or content was verified.",
+  "notice": "https://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/1: External details could not be read; no external status or content was verified.\nhttps://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/2: External details could not be read; no external status or content was verified.\nhttps://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/3: External details could not be read; no external status or content was verified.\nhttps://github.com/owner/flowly-delivery-fixture-20261022-036d/pull/4: External details could not be read; no external status or content was verified.",
   "reminders": [
     "You have proposed no ideas on this card. Consider 0-3 ideas (flowly_propose_idea) for worthwhile follow-ups you noticed: bugs, refactors, next features. Zero is fine; decide on purpose."
   ],
