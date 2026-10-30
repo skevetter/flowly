@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { displayableImage, extractImages, isRemoteImage, localImagePath, mayRequestImage } from "./images";
+import { displayableImage, extractImages, imageHost, isRemoteImage, localImagePath, mayRequestImage } from "./images";
 
 test("pasted-image placeholders and markdown images are extracted in order", () => {
   const r = extractImages("Look at this [Image: source: /private/tmp/a/images/1.png]\nand ![chart](https://x.y/c.png) ok");
@@ -41,4 +41,10 @@ test("local images never need approval", () => {
   expect(mayRequestImage("file:///tmp/a.png", { autoLoadRemote: false, approved: false })).toBe(true);
   expect(isRemoteImage("HTTPS://x.y/c.png")).toBe(true);
   expect(isRemoteImage("/tmp/a.png")).toBe(false);
+});
+
+test("the host of a remote image is named for the consent prompt", () => {
+  expect(imageHost("https://img.example.com:8443/a/b.png?x=1")).toBe("img.example.com:8443");
+  expect(imageHost("http://example.com")).toBe("example.com");
+  expect(imageHost("/tmp/a.png")).toBe("");
 });

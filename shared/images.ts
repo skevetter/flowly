@@ -39,7 +39,8 @@ export function extractImages(text: string): { text: string; images: ImageRef[] 
 
 export const isRemoteImage = (src: string) => /^https?:\/\//i.test(src);
 
-/** Remote hosts learn the viewer's address and time, so a remote image is requested only after consent. */
+export const imageHost = (src: string) => /^https?:\/\/([^/?#]*)/i.exec(src)?.[1] ?? "";
+
 export function mayRequestImage(src: string, consent: { autoLoadRemote: boolean; approved: boolean }) {
   return !isRemoteImage(src) || consent.autoLoadRemote || consent.approved;
 }

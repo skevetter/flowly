@@ -32,7 +32,6 @@ export const boardViewSettings = defineSettings({
     hideFinishedAfterDays: z.number().int().min(0).max(365).default(14),
     /** The dot sweep on running cards, sessions and subagent rows (MOTION-SPEC, running state). */
     runningSweep: z.boolean().default(true),
-    /** Remote images in transcripts load without a tap: off, because the image host sees the viewer's address and time. */
     loadRemoteImages: z.boolean().default(false),
     /** Before CONNECTORS-SPEC: the Jira picker's connection; read as `lastConnections.jira`. */
     lastTicketConnection: z.string().max(200).default(""),
