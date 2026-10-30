@@ -52,7 +52,7 @@ import { startedByUser, turnPick, userTexts } from "./shared/agent-habits";
 import { turnTimeline } from "./server/turn-timeline";
 import { MemoryService, setMemoryEverywhere, memoryOn } from "./server/memory";
 import { SearchService } from "./server/search";
-import { POSTHOG_KEY, TelemetryService } from "./server/telemetry";
+import { TelemetryService } from "./server/telemetry";
 import { FLOWLY_VERSION } from "./shared/version";
 import { logFailure, reportError, reportRpcErrors, setErrorSink } from "./server/error-report";
 
@@ -661,7 +661,7 @@ export default function contribute(host: PluginServerContext) {
   const telemetry = new TelemetryService({
     directory: store.directory,
     env: process.env,
-    apiKey: POSTHOG_KEY,
+    destination: async () => ready(await telemetryPrefs.read(), telemetrySettingsValues),
     paseoVersion: () => readPaseoVersion(paseoHome()),
     enabled: async () => ready(await telemetryPrefs.read().catch(() => null), telemetrySettingsValues).enabled,
     snapshot: async () => {

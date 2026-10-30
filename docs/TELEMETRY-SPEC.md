@@ -1,6 +1,6 @@
 # 匿名使用数据（遥测）
 
-Status: **已实现，待随 1.7.0 发布**（2026-10-26，卡片“遥测建设”；实现：`server/telemetry.ts`）。`POSTHOG_KEY` 已于 2026-10-26 填入 PostHog US 项目的 project token；常量为空时不发送。用户决定：使用 PostHog Cloud（最初定为 EU 区；2026-10-26 维护者的项目建在 US 区，用户决定改用 US 入口）；由 daemon 直接调用 capture HTTP API，不引入 SDK；每天发送一次心跳；字段按白名单；默认开启、可以关闭；遵守 `DO_NOT_TRACK`。2026-10-26 补充决定：
+Status: **已实现，待随 1.7.0 发布**（2026-10-26，卡片“遥测建设”；实现：`server/telemetry.ts`）。2026-10-30 起不再内置 key 和地址，改由 `telemetry` 设置提供，默认关闭（issue #3）。用户决定：使用 PostHog Cloud（最初定为 EU 区；2026-10-26 维护者的项目建在 US 区，用户决定改用 US 入口）；由 daemon 直接调用 capture HTTP API，不引入 SDK；每天发送一次心跳；字段按白名单；默认关闭、需用户打开并配置；遵守 `DO_NOT_TRACK`。2026-10-26 补充决定：
 
 - 用户被告知之前就可以发送，关闭之后不再发送；
 - 设置里只放简要说明，不提供逐字段预览，具体内容以开源代码和本 spec 为准；
@@ -39,10 +39,10 @@ Paseo 的插件注册表不提供安装或更新统计，npm 的下载量又混�
 
 ### 3.1 前提条件（全部满足才发送）
 
-1. 遥测开关为开（第 5 节），并且没有被环境变量强制关闭（第 6 节）；
+1. 遥测开关为开（第 5 节），`apiKey` 和 `endpoint` 都已设置，并且没有被环境变量强制关闭（第 6 节）；
 2. 距离上次**成功**发送已超过 20 小时（`lastSentAt`）。用 20 小时而不是 24 小时，是为了在每天固定时间开机的情况下，不会被推迟到第二天。
 
-发送不以用户是否已被告知为前提（用户决定 2026-10-26）。插件升级、或新用户第一次加载插件后，只要满足以上两条就开始发送。告知通过 What's new、导览和 README 完成（第 7 节）。
+发送不以用户是否已被告知为前提（用户决定 2026-10-26）。插件升级、或新用户第一次加载插件后，只要满足以上条件就开始发送。告知通过 What's new、导览和 README 完成（第 7 节）。
 
 ### 3.2 检查节奏
 
@@ -66,11 +66,11 @@ Paseo 的插件注册表不提供安装或更新统计，npm 的下载量又混�
 ### 4.1 请求
 
 ```
-POST https://us.i.posthog.com/i/v0/e/
+POST <telemetry 设置里的 endpoint>
 Content-Type: application/json
 
 {
-  "api_key": "<PostHog 项目 key，phc_ 开头，只写不读，写在源码常量里>",
+  "api_key": "<PostHog 项目 key，phc_ 开头，只写不读，取自 telemetry 设置的 apiKey>",
   "event": "flowly_heartbeat",
   "distinct_id": "<installId>",
   "timestamp": "<发送时间 ISO>",
@@ -84,7 +84,7 @@ Content-Type: application/json
 
 - `$process_person_profile: false`：作为匿名事件处理，PostHog 不建 person profile。
 - `$geoip_disable: true`：不做 IP 地理解析（用户决定 2026-10-26：做 i18n 时看界面实际使用的语言，即 §4.2 的 `ui_locale`，比按 IP 推断国家更准，也不会留下城市级位置）。
-- 入口地址与项目所在区域必须一致：US 项目用 `us.i.posthog.com`，EU 项目用 `eu.i.posthog.com`。capture 接口对任何 token 都返回 200，区域或 token 是否正确，可以用 `POST https://<区域>.i.posthog.com/flags/?v=2` 检查：token 不对或区域不对时返回 `authentication_failed`。
+- 使用 PostHog 时入口地址与项目所在区域必须一致：US 项目用 `us.i.posthog.com`，EU 项目用 `eu.i.posthog.com`。capture 接口对任何 token 都返回 200，区域或 token 是否正确，可以用 `POST https://<区域>.i.posthog.com/flags/?v=2` 检查：token 不对或区域不对时返回 `authentication_failed`。
 
 ### 4.2 环境与设置（每次都发）
 
@@ -156,7 +156,7 @@ Content-Type: application/json
 
 ## 5. 设置
 
-- 新增 host 设置 `telemetry`（`shared/settings.ts`）：`{ enabled: boolean, default true }`。
+- 新增 host 设置 `telemetry`（`shared/settings.ts`）：`{ enabled: boolean (默认 false), apiKey: string (默认 ""), endpoint: string (默认 "") }`。默认关闭；`apiKey` 或 `endpoint` 为空、设置读取失败时都不发送。源码里没有内置 key 和地址，两者只来自这个设置（用户决定 2026-10-30，issue #3）。
 - 放在 **Settings → General**，单独一组 **Usage data**，只有一个开关 **Send anonymous usage data**。说明行（涉及隐私，所以按 UI 文案规则保留）只做简要说明，不逐项列字段：*Once a day: versions, which features are on and usage counts. On errors: where in Flowly's code. Never your content, paths or code.* 不提供逐字段预览（用户决定 2026-10-26：项目开源，发送内容以 `server/telemetry.ts` 和本 spec 为准，README 的 Telemetry 一节链接到这两处）。
 - 被环境变量强制关闭时（第 6 节），开关显示为关、不可操作，说明行改为 *Turned off by DO_NOT_TRACK on this computer.* 客户端通过 RPC `telemetry.status`（返回 `{ forcedOff: boolean }`，有 schema 校验）得知这个状态。
 - 关闭后**立即生效**，从下一次检查开始不再发送任何东西，包括关闭这个动作本身。重新打开后照常发送。
@@ -179,8 +179,8 @@ Content-Type: application/json
 | 位置 | 内容 |
 |---|---|
 | What's new（引入遥测的那个版本，`client/whats-new.ts`） | 一条：*Flowly now sends anonymous usage data: once a day, versions, which features are on and usage counts; on errors, where in Flowly's code. Never your content, paths or code. You can turn it off in Settings.*，带 **Open settings** 按钮，打开 General |
-| 首次导览最后一页 Ready when you are（`client/onboarding.tsx`） | 在 More features 下面放同一个开关（`UsageDataGroup`），文案同第 5 节，默认开。Built in 页讲的是每张卡都在跑的功能，遥测放在那里不合适 |
-| README（英文、中文） | 新增 **Telemetry** 一节：几句话概括发送什么、不发送什么，关闭方法（设置或 `DO_NOT_TRACK=1`），数据存放地（PostHog US），并链接到本 spec 和 `server/telemetry.ts` |
+| 首次导览最后一页 Ready when you are（`client/onboarding.tsx`） | 在 More features 下面放同一个开关（`UsageDataGroup`），文案同第 5 节，默认关。Built in 页讲的是每张卡都在跑的功能，遥测放在那里不合适 |
+| README（英文、中文） | 新增 **Telemetry** 一节：几句话概括发送什么、不发送什么，默认关闭、需配置 `apiKey` 和 `endpoint`，强制关闭方法（`DO_NOT_TRACK=1`），并链接到本 spec 和 `server/telemetry.ts` |
 | ONBOARDING-SPEC | 记录最后一页新增的这一行。不加一次性 tip：What's new 已经覆盖老用户，导览覆盖新用户 |
 
 所有新文案进入 `shared/i18n/` 的全部目录（I18N-SPEC）。
@@ -189,10 +189,10 @@ Content-Type: application/json
 
 - PostHog 项目（US 区），打开 *Discard client IP data*，数据保留期用免费档的默认值。
 - Key 的维护：
-  - `server/telemetry.ts` 的 `POSTHOG_KEY` 是项目的 project token（`phc_…`），只能写入事件，不能读取数据，本来就设计成公开，随 npm 包发布，用户不用配置。
+  - key 是 PostHog 项目的 project token（`phc_…`），只能写入事件，不能读取数据；它由用户写入 `telemetry` 设置的 `apiKey`，不再内置于源码。
   - 不要提交 personal API key（`phx_…`），插件也用不到它。
   - 在 PostHog 里设置用量上限（billing limit），防止有人刷事件耗尽额度或产生费用。
-  - 只有在 key 被滥用时才更换：先在 PostHog 项目设置里重置 project token，再改 `POSTHOG_KEY` 并发布新版本。代价是旧版本的安装会停止上报，直到用户升级。
+  - 只有在 key 被滥用时才更换：先在 PostHog 项目设置里重置 project token，再通知用户更新设置里的 `apiKey`。
   - capture 接口对任何 key 都返回 200，key 是否正确要在 PostHog 的 Activity 页面看事件有没有到。
 - 建议的看板，全部基于 `flowly_heartbeat`，统计每天的独立 `distinct_id`：
   - 版本分布：按 `flowly_version` 分组；
@@ -207,7 +207,7 @@ Content-Type: application/json
 
 ## 9. 验收标准
 
-1. 开关为开、距上次成功发送超过 20 h 时，daemon 启动 5 分钟后发出**恰好一个**请求：发往 `https://us.i.posthog.com/i/v0/e/`，`event = flowly_heartbeat`，`properties` 的键集合与第 4 节完全一致。用 fetch 桩加单元测试断言键集合，任何多出来的键都判失败。
+1. 开关为开、距上次成功发送超过 20 h 时，daemon 启动 5 分钟后发出**恰好一个**请求：发往 `telemetry` 设置里配置的 `endpoint`，`event = flowly_heartbeat`，`properties` 的键集合与第 4 节完全一致。用 fetch 桩加单元测试断言键集合，任何多出来的键都判失败。
 2. 用户还没看过导览或 What's new 时，只要开关为开，照常发送。
 3. 关闭开关后，之后的每次检查都没有任何请求；重新打开后恢复发送，并沿用原来的 `installId`。
 4. `DO_NOT_TRACK=1`、`FLOWLY_TELEMETRY=0`、`NODE_ENV=test` 三种情况各自都没有任何请求，设置页显示强制关闭的状态。
@@ -232,7 +232,7 @@ Content-Type: application/json
 
 ### 11.1 前提
 
-和心跳相同：开关为开、没有被环境变量强制关闭（第 6 节）、`POSTHOG_KEY` 非空。不要求距上次心跳多久，也不要求用户看过告知（同第 3 节）。
+和心跳相同：开关为开、没有被环境变量强制关闭（第 6 节）、`apiKey` 和 `endpoint` 非空。不要求距上次心跳多久，也不要求用户看过告知（同第 3 节）。
 
 ### 11.2 采集点
 

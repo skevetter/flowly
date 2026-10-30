@@ -118,7 +118,7 @@ async function harness(options: { env?: NodeJS.ProcessEnv; enabled?: boolean; no
   const service = new TelemetryService({
     directory,
     env: options.env ?? {},
-    apiKey: "phc_test",
+    destination: async () => ({ apiKey: "phc_test", endpoint: "https://telemetry.example.test/capture" }),
     pluginRoot: ROOT,
     paseoVersion: options.paseoVersion,
     now: options.now ?? (() => NOW),

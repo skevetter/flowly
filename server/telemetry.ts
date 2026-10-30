@@ -8,14 +8,10 @@ import { FLOWLY_VERSION } from "../shared/version";
 import { exceptionReport } from "./error-report";
 
 /**
- * Anonymous daily heartbeat to PostHog Cloud US (TELEMETRY-SPEC). Only the daemon sends, at
+ * Anonymous daily heartbeat to a PostHog-compatible endpoint the user configures (TELEMETRY-SPEC). Only the daemon sends, at
  * most one `flowly_heartbeat` a day, with the whitelisted properties built below and nothing
  * else. Failures are silent: no retries queue, the next hourly check tries again.
  */
-
-export const POSTHOG_ENDPOINT = "https://us.i.posthog.com/i/v0/e/";
-/** Write-only project key (`phc_…`), public by design and safe in source; rotation in TELEMETRY-SPEC §8. Empty: nothing is sent. */
-export const POSTHOG_KEY = "phc_CUgzT9nWDYNm2XSqdQLAHyVc27GSvJyFPiEDrkSM6ZYS";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -224,18 +220,19 @@ export class TelemetryStateFile {
   }
 }
 
+export type TelemetryDestination = { apiKey: string; endpoint: string };
+
 export type TelemetryDeps = {
   directory: string;
   env: NodeJS.ProcessEnv;
-  apiKey: string;
-  endpoint?: string;
+  destination(): Promise<TelemetryDestination>;
   now?: () => number;
   fetch?: typeof fetch;
   /** Tests only: the folder whose files count as Flowly's own frames (§11). */
   pluginRoot?: string;
   /** The Paseo version for error reports (§11.3); "" when unknown. Asked again after an empty answer. */
   paseoVersion?(): Promise<string>;
-  /** The `telemetry` setting; unreadable settings count as on (the default). */
+  /** The `telemetry` setting; unreadable settings count as off. */
   enabled(): Promise<boolean>;
   snapshot(): Promise<TelemetrySnapshot>;
   /** Flow-log entries of every project, and memory confirmation times. */
@@ -304,7 +301,7 @@ export class TelemetryService {
    */
   async reportError(source: string, error: unknown, handled = true): Promise<boolean> {
     try {
-      if (this.forcedOff() || !this.deps.apiKey) return false;
+      if (this.forcedOff()) return false;
       const report = exceptionReport(error, source, handled, this.deps.pluginRoot);
       if (!handled && report.frames.length === 0) return false;
       const now = this.now();
@@ -315,7 +312,8 @@ export class TelemetryService {
       }
       if (this.errorsSent.has(report.fingerprint) || this.errorsSent.size >= MAX_ERRORS_PER_DAY) return false;
       this.errorsSent.add(report.fingerprint);
-      if (!(await this.deps.enabled().catch(() => true))) return false;
+      const destination = await this.activeDestination();
+      if (!destination) return false;
       const state = await this.stateOrCreate(now);
       this.paseoVersion ||= (await this.deps.paseoVersion?.().catch(() => "")) ?? "";
       const properties = {
@@ -332,21 +330,31 @@ export class TelemetryService {
         os: process.platform,
         arch: process.arch,
       };
-      return await this.post({ event: "$exception", distinct_id: state.installId, timestamp: new Date(now).toISOString(), properties });
+      return await this.post(destination, { event: "$exception", distinct_id: state.installId, timestamp: new Date(now).toISOString(), properties });
     } catch {
       return false;
     }
   }
+  private async activeDestination(): Promise<TelemetryDestination | null> {
+    if (this.forcedOff()) return null;
+    try {
+      if (!(await this.deps.enabled())) return null;
+      const destination = await this.deps.destination();
+      return destination.apiKey && destination.endpoint ? destination : null;
+    } catch {
+      return null;
+    }
+  }
   /** One capture request; true on a 2xx answer. */
-  private async post(event: { event: string; distinct_id: string; timestamp: string; properties: Record<string, unknown> }): Promise<boolean> {
+  private async post(destination: TelemetryDestination, event: { event: string; distinct_id: string; timestamp: string; properties: Record<string, unknown> }): Promise<boolean> {
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), REQUEST_TIMEOUT);
     timer.unref?.();
     try {
-      const response = await (this.deps.fetch ?? fetch)(this.deps.endpoint ?? POSTHOG_ENDPOINT, {
+      const response = await (this.deps.fetch ?? fetch)(destination.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: this.deps.apiKey, ...event }),
+        body: JSON.stringify({ api_key: destination.apiKey, ...event }),
         signal: abort.signal,
       });
       return response.ok;
@@ -357,10 +365,10 @@ export class TelemetryService {
     }
   }
   private async run(): Promise<CheckResult> {
-    const on = !this.forcedOff() && Boolean(this.deps.apiKey) && (await this.deps.enabled().catch(() => true));
+    const destination = await this.activeDestination();
     const stored = await this.file.read();
     const now = this.now();
-    if (!on) {
+    if (!destination) {
       // Off: nothing is sent, and the window restarts when it is turned back on (§5).
       if (stored?.windowStart) await this.file.write({ ...stored, windowStart: "" });
       return "off";
@@ -379,7 +387,7 @@ export class TelemetryService {
     const [snapshot, activity] = await Promise.all([this.deps.snapshot(), this.deps.activity()]);
     const counts = countWindow(activity.events, activity.memoryConfirmedAt, from, now);
     const properties = heartbeatProperties(snapshot, counts, gap > MAX_WINDOW ? Math.ceil(gap / DAY) : undefined);
-    const sent = await this.post({ event: "flowly_heartbeat", distinct_id: state.installId, timestamp: new Date(now).toISOString(), properties });
+    const sent = await this.post(destination, { event: "flowly_heartbeat", distinct_id: state.installId, timestamp: new Date(now).toISOString(), properties });
     if (!sent) return "failed";
     const sentAt = new Date(now).toISOString();
     await this.file.write({ ...state, lastSentAt: sentAt, windowStart: sentAt });

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { bucket, countWindow, forcedOff, heartbeatProperties, modelTable, TelemetryService, uiLocale, type TelemetrySnapshot } from "./telemetry";
 import { FLOWLY_VERSION } from "../shared/version";
 import type { FlowEntry } from "../shared/insights";
+import { telemetrySettingsValues } from "../shared/settings";
 import pkg from "../package.json";
 
 const HOUR = 3_600_000;
@@ -39,13 +40,13 @@ const expectedKeys = [
   "c_cards_created", "c_turns", "c_deliveries", "c_next_moves", "c_next_moves_picked", "c_ideas_proposed", "c_ideas_accepted", "c_ideas_dismissed", "c_memory_proposed", "c_memory_confirmed", "c_wrapups", "models",
 ].sort();
 
-function harness(directory: string, options: { env?: NodeJS.ProcessEnv; enabled?: () => Promise<boolean>; status?: number; throws?: boolean; now?: () => number; events?: FlowEntry[] } = {}) {
+function harness(directory: string, options: { env?: NodeJS.ProcessEnv; enabled?: () => Promise<boolean>; destination?: () => Promise<{ apiKey: string; endpoint: string }>; status?: number; throws?: boolean; now?: () => number; events?: FlowEntry[] } = {}) {
   const calls: { url: string; body: { api_key: string; event: string; distinct_id: string; properties: Record<string, unknown> } }[] = [];
   let enabled = true;
   const service = new TelemetryService({
     directory,
     env: options.env ?? {},
-    apiKey: "phc_test",
+    destination: options.destination ?? (async () => ({ apiKey: "phc_test", endpoint: "https://telemetry.example.test/capture" })),
     now: options.now ?? (() => NOW),
     enabled: options.enabled ?? (async () => enabled),
     snapshot: async () => snapshot,
@@ -63,11 +64,11 @@ test("version constant matches package.json", () => {
   expect(FLOWLY_VERSION).toBe(pkg.version);
 });
 
-test("§9-1, §9-2: a due check sends exactly one heartbeat to PostHog US with exactly the whitelisted keys", async () => {
+test("§9-1, §9-2: a due check sends exactly one heartbeat to the configured endpoint with exactly the whitelisted keys", async () => {
   const { service, calls } = harness(await dir());
   expect(await service.check()).toBe("sent");
   expect(calls).toHaveLength(1);
-  expect(calls[0].url).toBe("https://us.i.posthog.com/i/v0/e/");
+  expect(calls[0].url).toBe("https://telemetry.example.test/capture");
   expect(calls[0].body.event).toBe("flowly_heartbeat");
   expect(calls[0].body.api_key).toBe("phc_test");
   expect(Object.keys(calls[0].body.properties).sort()).toEqual(expectedKeys);
@@ -96,6 +97,38 @@ test("§9-1: the first check runs 5 minutes after start", async () => {
     service.stop();
     vi.useRealTimers();
   }
+});
+
+test("a destination without a key or endpoint sends nothing, whatever the switch says", async () => {
+  for (const destination of [{ apiKey: "", endpoint: "https://telemetry.example.test/capture" }, { apiKey: "phc_user", endpoint: "" }]) {
+    const { service, calls } = harness(await dir(), { destination: async () => destination });
+    expect(await service.check()).toBe("off");
+    expect(await service.reportError("x", new Error("boom"), true)).toBe(false);
+    expect(calls).toHaveLength(0);
+  }
+});
+
+test("default settings send nothing", async () => {
+  const defaults = telemetrySettingsValues({});
+  expect(defaults).toEqual({ enabled: false, apiKey: "", endpoint: "" });
+  const { service, calls } = harness(await dir(), { enabled: async () => defaults.enabled, destination: async () => defaults });
+  expect(await service.check()).toBe("off");
+  expect(await service.reportError("x", new Error("boom"), true)).toBe(false);
+  expect(calls).toHaveLength(0);
+});
+
+test("unreadable settings count as off", async () => {
+  const unreadable = () => Promise.reject(new Error("settings unreadable"));
+  const { service, calls } = harness(await dir(), { enabled: unreadable, destination: unreadable });
+  expect(await service.check()).toBe("off");
+  expect(calls).toHaveLength(0);
+});
+
+test("a heartbeat goes to the configured endpoint with the configured key", async () => {
+  const { service, calls } = harness(await dir(), { destination: async () => ({ apiKey: "phc_user", endpoint: "https://telemetry.example.test/capture" }) });
+  expect(await service.check()).toBe("sent");
+  expect(calls[0]!.url).toBe("https://telemetry.example.test/capture");
+  expect(calls[0]!.body.api_key).toBe("phc_user");
 });
 
 test("§9-3: off sends nothing; turning it back on keeps the install id", async () => {
