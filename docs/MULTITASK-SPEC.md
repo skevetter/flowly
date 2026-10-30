@@ -94,7 +94,7 @@
 
 ## 补充：移出 Done/Cancelled 时恢复 workspace（2026-10-15）
 
-把已收尾的卡片移出 Done/Cancelled 时，后台恢复收尾时归档的 workspace：沿用同一 workspace ID，worktree 被删除的会在原分支上重建。同时恢复该次收尾归档的 session（用户自己归档的不动）。详见 [WORKSPACE-RESTORE-SPEC](WORKSPACE-RESTORE-SPEC.md)。
+把已收尾的卡片移出 Done/Cancelled 时不再自动恢复 workspace 和 session（issue #1：不再读取本地凭据，SDK 没有恢复调用）；只记录 `workspace_restore_skipped`。见 [WORKSPACE-RESTORE-SPEC](WORKSPACE-RESTORE-SPEC.md)。
 
 ## 不做
 

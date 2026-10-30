@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LocalDaemonUnavailable } from "./local-daemon";
+import { daemonRevive } from "./background-workspace";
 import { unavailableWorkspaceRecovery, workspaceRecoveryUnavailable } from "./workspace-restore";
 
 const root = join(__dirname, "..");
@@ -25,4 +26,8 @@ test("workspace recovery without the SDK fails with a clear message", async () =
   const failure = await unavailableWorkspaceRecovery.connect().catch((e: unknown) => e);
   expect(failure).toBeInstanceOf(LocalDaemonUnavailable);
   expect((failure as Error).message).toBe(workspaceRecoveryUnavailable);
+});
+
+test("the background workspace cannot be revived without the SDK", async () => {
+  await expect(daemonRevive()("workspace-1")).rejects.toThrow(workspaceRecoveryUnavailable);
 });
