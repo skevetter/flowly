@@ -39,10 +39,10 @@ Paseo 的插件注册表不提供安装或更新统计，npm 的下载量又混�
 
 ### 3.1 前提条件（全部满足才发送）
 
-1. 遥测开关为开（第 5 节），并且没有被环境变量强制关闭（第 6 节）；
+1. 遥测开关为开（第 5 节），`apiKey` 和 `endpoint` 都已设置，并且没有被环境变量强制关闭（第 6 节）；
 2. 距离上次**成功**发送已超过 20 小时（`lastSentAt`）。用 20 小时而不是 24 小时，是为了在每天固定时间开机的情况下，不会被推迟到第二天。
 
-发送不以用户是否已被告知为前提（用户决定 2026-10-26）。插件升级、或新用户第一次加载插件后，只要满足以上两条就开始发送。告知通过 What's new、导览和 README 完成（第 7 节）。
+发送不以用户是否已被告知为前提（用户决定 2026-10-26）。插件升级、或新用户第一次加载插件后，只要满足以上条件就开始发送。告知通过 What's new、导览和 README 完成（第 7 节）。
 
 ### 3.2 检查节奏
 
@@ -66,11 +66,11 @@ Paseo 的插件注册表不提供安装或更新统计，npm 的下载量又混�
 ### 4.1 请求
 
 ```
-POST https://us.i.posthog.com/i/v0/e/
+POST <telemetry 设置里的 endpoint>
 Content-Type: application/json
 
 {
-  "api_key": "<PostHog 项目 key，phc_ 开头，只写不读，写在源码常量里>",
+  "api_key": "<PostHog 项目 key，phc_ 开头，只写不读，取自 telemetry 设置的 apiKey>",
   "event": "flowly_heartbeat",
   "distinct_id": "<installId>",
   "timestamp": "<发送时间 ISO>",
@@ -84,7 +84,7 @@ Content-Type: application/json
 
 - `$process_person_profile: false`：作为匿名事件处理，PostHog 不建 person profile。
 - `$geoip_disable: true`：不做 IP 地理解析（用户决定 2026-10-26：做 i18n 时看界面实际使用的语言，即 §4.2 的 `ui_locale`，比按 IP 推断国家更准，也不会留下城市级位置）。
-- 入口地址与项目所在区域必须一致：US 项目用 `us.i.posthog.com`，EU 项目用 `eu.i.posthog.com`。capture 接口对任何 token 都返回 200，区域或 token 是否正确，可以用 `POST https://<区域>.i.posthog.com/flags/?v=2` 检查：token 不对或区域不对时返回 `authentication_failed`。
+- 使用 PostHog 时入口地址与项目所在区域必须一致：US 项目用 `us.i.posthog.com`，EU 项目用 `eu.i.posthog.com`。capture 接口对任何 token 都返回 200，区域或 token 是否正确，可以用 `POST https://<区域>.i.posthog.com/flags/?v=2` 检查：token 不对或区域不对时返回 `authentication_failed`。
 
 ### 4.2 环境与设置（每次都发）
 
@@ -179,8 +179,8 @@ Content-Type: application/json
 | 位置 | 内容 |
 |---|---|
 | What's new（引入遥测的那个版本，`client/whats-new.ts`） | 一条：*Flowly now sends anonymous usage data: once a day, versions, which features are on and usage counts; on errors, where in Flowly's code. Never your content, paths or code. You can turn it off in Settings.*，带 **Open settings** 按钮，打开 General |
-| 首次导览最后一页 Ready when you are（`client/onboarding.tsx`） | 在 More features 下面放同一个开关（`UsageDataGroup`），文案同第 5 节，默认开。Built in 页讲的是每张卡都在跑的功能，遥测放在那里不合适 |
-| README（英文、中文） | 新增 **Telemetry** 一节：几句话概括发送什么、不发送什么，关闭方法（设置或 `DO_NOT_TRACK=1`），数据存放地（PostHog US），并链接到本 spec 和 `server/telemetry.ts` |
+| 首次导览最后一页 Ready when you are（`client/onboarding.tsx`） | 在 More features 下面放同一个开关（`UsageDataGroup`），文案同第 5 节，默认关。Built in 页讲的是每张卡都在跑的功能，遥测放在那里不合适 |
+| README（英文、中文） | 新增 **Telemetry** 一节：几句话概括发送什么、不发送什么，默认关闭、需配置 `apiKey` 和 `endpoint`，强制关闭方法（`DO_NOT_TRACK=1`），并链接到本 spec 和 `server/telemetry.ts` |
 | ONBOARDING-SPEC | 记录最后一页新增的这一行。不加一次性 tip：What's new 已经覆盖老用户，导览覆盖新用户 |
 
 所有新文案进入 `shared/i18n/` 的全部目录（I18N-SPEC）。

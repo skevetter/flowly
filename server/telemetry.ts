@@ -225,7 +225,6 @@ export type TelemetryDestination = { apiKey: string; endpoint: string };
 export type TelemetryDeps = {
   directory: string;
   env: NodeJS.ProcessEnv;
-  /** The `telemetry` setting's key and endpoint; nothing is sent while either is empty. */
   destination(): Promise<TelemetryDestination>;
   now?: () => number;
   fetch?: typeof fetch;
@@ -336,7 +335,6 @@ export class TelemetryService {
       return false;
     }
   }
-  /** Where to send, or null while the switch is off, the settings are unreadable or the key or endpoint is empty. */
   private async activeDestination(): Promise<TelemetryDestination | null> {
     if (this.forcedOff()) return null;
     try {
