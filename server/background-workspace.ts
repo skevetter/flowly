@@ -30,7 +30,11 @@ export function daemonRevive(recovery: WorkspaceRecovery = unavailableWorkspaceR
   };
 }
 
-const stateSchema = z.object({ version: z.literal(1), projects: z.record(z.string(), z.string()) });
+const stateSchema = z.object({
+  version: z.literal(1),
+  projects: z.record(z.string(), z.string()),
+  unarchived: z.array(z.string()).optional(),
+});
 type State = z.infer<typeof stateSchema>;
 
 /**
@@ -70,14 +74,31 @@ export class BackgroundWorkspaces {
         const slot = this.slots.get(project.id);
         if (!slot || --slot.users > 0) return;
         this.slots.delete(project.id);
-        await paseo.workspaces.archive(id).catch((e) =>
-          logFailure("Flowly could not archive its background workspace:", e),
-        );
+        if (!(await this.archive(paseo, id))) await this.write((state) => (state.unarchived = [...(state.unarchived ?? []), id]));
       });
     }
   }
 
+  private async archive(paseo: PaseoApi, id: string) {
+    try {
+      const result = await paseo.workspaces.archive(id);
+      if (!result?.error) return true;
+      throw new Error(result.error);
+    } catch (e) {
+      logFailure("Flowly could not archive its background workspace:", e);
+      return false;
+    }
+  }
+
+  private async archiveLeftovers(paseo: PaseoApi) {
+    const { unarchived = [] } = await this.read();
+    for (const id of unarchived) {
+      if (await this.archive(paseo, id)) await this.write((state) => (state.unarchived = state.unarchived?.filter((other) => other !== id)));
+    }
+  }
+
   private async open(project: Project, paseo: PaseoApi) {
+    await this.archiveLeftovers(paseo);
     const known = (await this.read()).projects[project.id];
     if (known) {
       const state = await this.revive(known).catch((e) => {

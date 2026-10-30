@@ -18,6 +18,7 @@ async function setup(revival: Revival | Error = "live") {
   roots.push(dir);
   const log: string[] = [];
   let made = 0;
+  let archiveFails = false;
   const paseo = {
     workspaces: {
       create: async (o: { title: string; source: { kind: string; path: string; projectId: string } }) => {
@@ -27,6 +28,7 @@ async function setup(revival: Revival | Error = "live") {
       },
       archive: async (id: string) => {
         log.push(`archive ${id}`);
+        if (archiveFails) throw new Error("offline");
         return {};
       },
     },
@@ -36,7 +38,8 @@ async function setup(revival: Revival | Error = "live") {
     if (revival instanceof Error) throw revival;
     return revival;
   };
-  return { dir, log, paseo, bg: new BackgroundWorkspaces(dir, revive) };
+  const failArchive = (fails: boolean) => void (archiveFails = fails);
+  return { dir, log, paseo, failArchive, bg: new BackgroundWorkspaces(dir, revive) };
 }
 
 test("the first run makes the project's background workspace at its root and archives it afterwards", async () => {
@@ -90,6 +93,32 @@ test("a failed run still archives the workspace, and an archive failure does not
   expect(x.log.at(-1)).toBe("archive bg-1");
   (x.paseo.workspaces as unknown as { archive: () => Promise<never> }).archive = async () => Promise.reject(new Error("offline"));
   await expect(x.bg.use(project, x.paseo, async () => "ok")).resolves.toBe("ok");
+});
+
+test("a workspace whose archive failed is archived on the next run before a new one is made", async () => {
+  const x = await setup("gone");
+  x.failArchive(true);
+  await x.bg.use(project, x.paseo, async () => undefined);
+  x.failArchive(false);
+  x.log.length = 0;
+  await x.bg.use(project, x.paseo, async (id) => void x.log.push(`run ${id}`));
+  expect(x.log).toEqual(["archive bg-1", "revive bg-1", `create ${BACKGROUND_TITLE} directory /repo native`, "run bg-2", "archive bg-2"]);
+});
+
+test("a workspace archived successfully is not archived again", async () => {
+  const x = await setup("gone");
+  await x.bg.use(project, x.paseo, async () => undefined);
+  x.log.length = 0;
+  await x.bg.use(project, x.paseo, async () => undefined);
+  expect(x.log.filter((l) => l === "archive bg-1")).toEqual([]);
+});
+
+test("an archive the daemon reports as failed counts as not archived", async () => {
+  const x = await setup("gone");
+  (x.paseo.workspaces as unknown as { archive: () => Promise<unknown> }).archive = async () => ({ error: "busy" });
+  await x.bg.use(project, x.paseo, async () => undefined);
+  const stored = JSON.parse(await readFile(join(x.dir, "background-workspaces.json"), "utf8"));
+  expect(stored.unarchived).toEqual(["bg-1"]);
 });
 
 test("invalid stored data is preserved and the run refuses rather than replacing it", async () => {
