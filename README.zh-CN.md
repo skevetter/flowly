@@ -136,7 +136,7 @@ Flowly 不读取 Paseo daemon 凭据（`~/.paseo/local-credential`），也不�
 - 卡片移出 Done 或 Cancelled 时恢复已归档的 workspace 并取消归档其会话。重新打开时会记录跳过恢复及原因；请在 Paseo 中恢复 workspace。
 - 清除会话在 Paseo 中的原生未读标记。标记已读只在 Flowly 内生效。
 - 硬删除临时的摘要、洞察和记忆复盘会话，改为归档。
-- 复用已归档的后台 workspace，改为新建。
+- 复用已归档的后台 workspace。每次运行新建一个，并在项目中最后一个运行结束时归档，因此活动 workspace 列表不会增长；Paseo 中每次运行保留一条已归档记录。归档失败的 workspace 会在下次运行前再次归档。
 - 错误报告中的 Paseo 版本，`paseo_version` 为空。
 
 ### 遥测
