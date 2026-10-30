@@ -74,39 +74,43 @@ export class BackgroundWorkspaces {
         const slot = this.slots.get(project.id);
         if (!slot || --slot.users > 0) return;
         this.slots.delete(project.id);
-        if (!(await this.archive(paseo, id))) await this.write((state) => (state.unarchived = [...(state.unarchived ?? []), id]));
+        if (!(await this.archive(paseo, id))) await this.rememberUnarchived(id);
       });
     }
   }
 
   private async archive(paseo: PaseoApi, id: string) {
-    try {
-      const result = await paseo.workspaces.archive(id);
-      if (!result?.error) return true;
-      throw new Error(result.error);
-    } catch (e) {
-      logFailure("Flowly could not archive its background workspace:", e);
-      return false;
-    }
+    const failure = await paseo.workspaces.archive(id).then((result) => result?.error, (e) => e);
+    if (!failure) return true;
+    logFailure("Flowly could not archive its background workspace:", failure);
+    return false;
   }
 
-  private async archiveLeftovers(paseo: PaseoApi) {
+  private rememberUnarchived(id: string) {
+    return this.write((state) => (state.unarchived = [...new Set([...(state.unarchived ?? []), id])])).catch((e) =>
+      logFailure("Flowly could not record an unarchived background workspace:", e),
+    );
+  }
+
+  private async archiveLeftovers(paseo: PaseoApi, reused?: string) {
     const { unarchived = [] } = await this.read();
-    for (const id of unarchived) {
+    const inUse = new Set([reused, ...[...this.slots.values()].map((slot) => slot.id)]);
+    for (const id of unarchived.filter((leftover) => !inUse.has(leftover))) {
       if (await this.archive(paseo, id)) await this.write((state) => (state.unarchived = state.unarchived?.filter((other) => other !== id)));
     }
   }
 
   private async open(project: Project, paseo: PaseoApi) {
-    await this.archiveLeftovers(paseo);
     const known = (await this.read()).projects[project.id];
-    if (known) {
-      const state = await this.revive(known).catch((e) => {
-        logFailure("Flowly could not restore its background workspace; making a new one:", e);
-        return "gone" as const;
-      });
-      if (state !== "gone") return known;
-    }
+    const state = known
+      ? await this.revive(known).catch((e) => {
+          logFailure("Flowly could not restore its background workspace; making a new one:", e);
+          return "gone" as const;
+        })
+      : "gone";
+    const reused = state === "gone" ? undefined : known;
+    await this.archiveLeftovers(paseo, reused);
+    if (reused) return reused;
     const created = await paseo.workspaces.create({
       title: BACKGROUND_TITLE,
       idempotencyKey: `flowly-background:${project.id}:${randomUUID()}`,

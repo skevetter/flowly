@@ -102,7 +102,37 @@ test("a workspace whose archive failed is archived on the next run before a new 
   x.failArchive(false);
   x.log.length = 0;
   await x.bg.use(project, x.paseo, async (id) => void x.log.push(`run ${id}`));
-  expect(x.log).toEqual(["archive bg-1", "revive bg-1", `create ${BACKGROUND_TITLE} directory /repo native`, "run bg-2", "archive bg-2"]);
+  expect(x.log).toEqual(["revive bg-1", "archive bg-1", `create ${BACKGROUND_TITLE} directory /repo native`, "run bg-2", "archive bg-2"]);
+});
+
+test("a workspace that keeps failing to archive is recorded once", async () => {
+  const x = await setup("live");
+  x.failArchive(true);
+  for (let run = 0; run < 3; run++) await x.bg.use(project, x.paseo, async () => undefined);
+  const stored = JSON.parse(await readFile(join(x.dir, "background-workspaces.json"), "utf8"));
+  expect(stored.unarchived).toEqual(["bg-1"]);
+});
+
+test("a run still returns its result when the failed archive cannot be recorded", async () => {
+  const x = await setup();
+  x.failArchive(true);
+  await x.bg.use(project, x.paseo, async () => undefined);
+  await writeFile(join(x.dir, "background-workspaces.json"), "{oops");
+  (x.bg as unknown as { read: () => Promise<unknown> }).read = async () => ({ version: 1, projects: { p: "bg-1" } });
+  await expect(x.bg.use(project, x.paseo, async () => "ok")).resolves.toBe("ok");
+});
+
+test("a leftover another project is using is not archived", async () => {
+  const x = await setup("live");
+  x.failArchive(true);
+  await x.bg.use(project, x.paseo, async () => undefined);
+  x.failArchive(false);
+  x.log.length = 0;
+  const other = { ...project, id: "q" } as Project;
+  await x.bg.use(project, x.paseo, async () => {
+    await x.bg.use(other, x.paseo, async () => undefined);
+  });
+  expect(x.log.filter((l) => l === "archive bg-1")).toHaveLength(1);
 });
 
 test("a workspace archived successfully is not archived again", async () => {
