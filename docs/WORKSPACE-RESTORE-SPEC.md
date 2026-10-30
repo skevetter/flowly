@@ -1,5 +1,7 @@
 # Restore a wrapped-up card's workspace and sessions when it leaves Done/Cancelled
 
+> Superseded 2026-10-30 (issue #1): Flowly no longer reads the Paseo local credential, so restore and session unarchive are unavailable until the SDK exposes them. A reopen records `workspace_restore_skipped` with the reason. The behavior below applies once the SDK offers the calls.
+
 Status: the user requested this on 2026-10-15 and chose option A, a temporary direct daemon connection. Their words: "按A试一下，并进行测试，如果通过就先这么用，记录着，以后SDK支持了的话再改方案". Upstream: [MULTITASK-SPEC](MULTITASK-SPEC.md) (wrap-up, auto wrap-up).
 
 ## Behavior

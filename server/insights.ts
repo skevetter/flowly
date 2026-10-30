@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { PaseoApi } from "@getpaseo/client";
 import { backgroundWorkspaces, type BackgroundWorkspaces } from "./background-workspace";
-import { daemonRemoveAgent, type RemoveAgent } from "./summarizer-remove";
+import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import type { LocaleCode } from "../shared/i18n";
 import type { BoardStore } from "./store";
 import type { FlowLog } from "./flow-log";
@@ -158,7 +158,7 @@ export class InsightsService {
     /** Where the digest runs: the project's background workspace, never a card's (§7). */
     private background: BackgroundWorkspaces = backgroundWorkspaces(board.directory),
     /** Hard-deletes the digest's session when done; archives it if that fails (AGENTS.md exception, §7). */
-    private removeAgent: RemoveAgent = daemonRemoveAgent(),
+    private removeAgent: RemoveAgent = archiveRemovedAgent,
   ) {}
 
   /** Appends board events the flow log lacks (startup backfill and missed appends). */

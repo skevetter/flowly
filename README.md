@@ -131,6 +131,16 @@ Summary models are an ordered fallback list in Settings → Models: add models a
 
 Board data is stored on the daemon machine in `~/.paseo/plugin-data/flowly/` (`PASEO_HOME` selects the daemon home): in a local SQLite database, `flowly.sqlite`, where Paseo supports it, otherwise in `board.json`. *Settings → Storage* shows where it is, keeps a daily backup (the last 7), restores one, and exports the board to JSON. Writes are serialized and atomic, stale edits are rejected, and invalid files are preserved rather than reset. Removing or permanently deleting a project or card writes a backup to `removed/` first. Archiving plugin records never deletes Paseo resources or directories. The tool service listens on loopback with private per-session credentials.
 
+### Calls Flowly does not make
+
+Flowly does not read the Paseo daemon credential (`~/.paseo/local-credential`) and opens no second daemon connection. The plugin SDK lacks these calls, so they are unavailable:
+
+- Restoring an archived workspace and unarchiving its sessions when a card leaves Done or Cancelled. The reopen records a skipped restore with the reason; restore the workspace in Paseo.
+- Clearing a session's native Paseo unread flag. Mark as read stays in Flowly.
+- Hard-deleting temporary summary, insight and memory-review sessions. They are archived instead.
+- Reusing the background workspace after it was archived. Flowly creates a new one.
+- The Paseo version in error reports. `paseo_version` is empty.
+
 ### Telemetry
 
 Telemetry is off by default and nothing is sent until you turn it on in Settings → General → *Send anonymous usage data* and set the `apiKey` and `endpoint` of a PostHog-compatible capture API in the `telemetry` plugin setting. When on, once a day the daemon sends anonymous usage data to that endpoint: the Flowly version, OS and Node version, the interface language, which features are switched on, rough project and card counts, and how many cards, agent turns, deliveries, next moves, ideas and memories there were since the last one, with the models used. When Flowly's daemon hits an error it also sends the error's type and code and where in Flowly's own code it happened (file and line), at most once a day per kind. It never sends error messages, titles, descriptions, chat messages, your paths (only file paths inside Flowly), repository names or IDs of your projects, cards or sessions, and no IP-based location. Setting `DO_NOT_TRACK=1` (or `FLOWLY_TELEMETRY=0`) for the Paseo daemon forces it off whatever the settings say. Exactly what is sent: [`server/telemetry.ts`](server/telemetry.ts) and [docs/TELEMETRY-SPEC.md](docs/TELEMETRY-SPEC.md).

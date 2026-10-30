@@ -9,7 +9,7 @@ import type { FlowLog } from "./flow-log";
 import type { CommandLog } from "./command-log";
 import { availableModels } from "./summaries";
 import { backgroundWorkspaces, type BackgroundWorkspaces } from "./background-workspace";
-import { daemonRemoveAgent, type RemoveAgent } from "./summarizer-remove";
+import { archiveRemovedAgent, type RemoveAgent } from "./summarizer-remove";
 import { validZone } from "../shared/insights";
 import { SUMMARIZER_LABELS, isSummarizer, resolveModel, summaryModelsOf, type SummarySettings } from "../shared/summary";
 import type { Board, Project } from "../shared/model";
@@ -170,7 +170,7 @@ export class WorkflowInsightsService {
     /** Where the run happens: the project's background workspace, never a card's. */
     private background: BackgroundWorkspaces = backgroundWorkspaces(board.directory),
     /** Hard-deletes the run's session when done; archives it if that fails (AGENTS.md exception). */
-    private removeAgent: RemoveAgent = daemonRemoveAgent(),
+    private removeAgent: RemoveAgent = archiveRemovedAgent,
   ) {}
 
   /** Card summaries and project memory for the skill material (INSIGHTS-REDESIGN-SPEC §3.2); set by the daemon. */

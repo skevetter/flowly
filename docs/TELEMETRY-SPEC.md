@@ -1,5 +1,7 @@
 # 匿名使用数据（遥测）
 
+> 2026-10-30 (issue #1): `paseo_version` is always `""`; reading it needed the local credential (§11.3).
+
 Status: **已实现，待随 1.7.0 发布**（2026-10-26，卡片“遥测建设”；实现：`server/telemetry.ts`）。2026-10-30 起不再内置 key 和地址，改由 `telemetry` 设置提供，默认关闭（issue #3）。用户决定：使用 PostHog Cloud（最初定为 EU 区；2026-10-26 维护者的项目建在 US 区，用户决定改用 US 入口）；由 daemon 直接调用 capture HTTP API，不引入 SDK；每天发送一次心跳；字段按白名单；默认关闭、需用户打开并配置；遵守 `DO_NOT_TRACK`。2026-10-26 补充决定：
 
 - 用户被告知之前就可以发送，关闭之后不再发送；

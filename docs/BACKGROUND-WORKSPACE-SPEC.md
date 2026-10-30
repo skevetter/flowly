@@ -1,5 +1,7 @@
 # Background workspace for project-level temporary sessions
 
+> Superseded 2026-10-30 (issue #1): restoring an archived background workspace is unavailable without the local credential, so a new one is created each time.
+
 Status: user-requested 2026-10-23 (card "memory review session修复"). Their words: "用专用后台workspace，并在使用完成后自动archive，使用前检查有没有archived workspace，有就复用，没有新建". Supersedes the run location in PROJECT-INSIGHTS-SPEC §7, PROJECT-MEMORY-SPEC §4.2 and WORKFLOW-INSIGHTS-SPEC.
 
 ## Problem
