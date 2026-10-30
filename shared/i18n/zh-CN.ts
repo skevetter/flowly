@@ -1401,5 +1401,9 @@ const catalog: Catalog = {
   "Previous day": "前一天",
   "Next day": "后一天",
   "agent {time}": "agent {time}",
+  "Remote images": "远程图片",
+  "Load remote images automatically": "自动加载远程图片",
+  "The image's host sees this computer's address and when you looked. While this is off, a tap loads one image.": "图片所在主机会看到这台电脑的地址和查看时间。关闭时,点按可加载单张图片。",
+  "Load image": "加载图片",
 };
 export default catalog;

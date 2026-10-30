@@ -155,6 +155,10 @@ Flowly runs no model until you turn on **Settings → AI features → Send text 
 
 Two caps limit the spend. **Model runs per day** (default 50, counted per UTC day across all features) refuses further runs until the next day, and the refusal shows where that feature shows errors. **Text per run** (default and maximum 12000 characters) cuts a conversation excerpt, keeping the start and the end. Details: [docs/MODEL-CALL-LIMITS-SPEC.md](docs/MODEL-CALL-LIMITS-SPEC.md).
 
+### Remote images
+
+A session transcript can reference images on other hosts. Flowly requests none of them until you tap **Load image** on that image, or turn on **Settings → General → Load remote images automatically** (off by default). The image's host sees this computer's address and when you looked. Images from files on the daemon machine are not affected. Links open only with `http` or `https`.
+
 ### Telemetry
 
 Telemetry is off by default and nothing is sent until you turn it on in Settings → General → *Send anonymous usage data* and set the `apiKey` and `endpoint` of a PostHog-compatible capture API in the `telemetry` plugin setting. When on, once a day the daemon sends anonymous usage data to that endpoint: the Flowly version, OS and Node version, the interface language, which features are switched on, rough project and card counts, and how many cards, agent turns, deliveries, next moves, ideas and memories there were since the last one, with the models used. When Flowly's daemon hits an error it also sends the error's type and code and where in Flowly's own code it happened (file and line), at most once a day per kind. It never sends error messages, titles, descriptions, chat messages, your paths (only file paths inside Flowly), repository names or IDs of your projects, cards or sessions, and no IP-based location. Setting `DO_NOT_TRACK=1` (or `FLOWLY_TELEMETRY=0`) for the Paseo daemon forces it off whatever the settings say. Exactly what is sent: [`server/telemetry.ts`](server/telemetry.ts) and [docs/TELEMETRY-SPEC.md](docs/TELEMETRY-SPEC.md).

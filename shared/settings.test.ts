@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 import { boardViewValues, statusSettingsValues } from "./settings";
 
 test("older stored settings get defaults for newer fields; invalid values fall back", () => {
-  expect(boardViewValues({ lastProjectId: "p" })).toEqual({ lastProjectId: "p", sendBehavior: "steer", startAgentOnCreate: true, boardSort: "manual", collapsedColumns: [], filterSearch: "", filterPriority: "all", filterType: "all", filterTags: [], showArchived: false, hideFinishedAfterDays: 14, runningSweep: true, lastTicketConnection: "", lastConnections: {}, cardActivity: "auto", cardHidden: [], drawerOrder: [], drawerOpen: {}, drawerWidth: 0 });
-  expect(boardViewValues(undefined)).toEqual({ lastProjectId: "", sendBehavior: "steer", startAgentOnCreate: true, boardSort: "manual", collapsedColumns: [], filterSearch: "", filterPriority: "all", filterType: "all", filterTags: [], showArchived: false, hideFinishedAfterDays: 14, runningSweep: true, lastTicketConnection: "", lastConnections: {}, cardActivity: "auto", cardHidden: [], drawerOrder: [], drawerOpen: {}, drawerWidth: 0 });
+  expect(boardViewValues({ lastProjectId: "p" })).toEqual({ lastProjectId: "p", sendBehavior: "steer", startAgentOnCreate: true, boardSort: "manual", collapsedColumns: [], filterSearch: "", filterPriority: "all", filterType: "all", filterTags: [], showArchived: false, hideFinishedAfterDays: 14, runningSweep: true, loadRemoteImages: false, lastTicketConnection: "", lastConnections: {}, cardActivity: "auto", cardHidden: [], drawerOrder: [], drawerOpen: {}, drawerWidth: 0 });
+  expect(boardViewValues(undefined)).toEqual({ lastProjectId: "", sendBehavior: "steer", startAgentOnCreate: true, boardSort: "manual", collapsedColumns: [], filterSearch: "", filterPriority: "all", filterType: "all", filterTags: [], showArchived: false, hideFinishedAfterDays: 14, runningSweep: true, loadRemoteImages: false, lastTicketConnection: "", lastConnections: {}, cardActivity: "auto", cardHidden: [], drawerOrder: [], drawerOpen: {}, drawerWidth: 0 });
   expect(boardViewValues({ sendBehavior: "bogus" }).sendBehavior).toBe("steer");
   expect(boardViewValues({ sendBehavior: "queue", startAgentOnCreate: false })).toMatchObject({ sendBehavior: "queue", startAgentOnCreate: false });
 });
@@ -55,4 +55,9 @@ test("the timing log is off unless the host setting says so", async () => {
   expect(performanceLogOn({})).toBe(false);
   expect(performanceLogOn({ log: "yes" })).toBe(false);
   expect(performanceLogOn({ log: true })).toBe(true);
+});
+test("remote images stay off unless the stored value says on", () => {
+  expect(boardViewValues({}).loadRemoteImages).toBe(false);
+  expect(boardViewValues({ loadRemoteImages: "yes" }).loadRemoteImages).toBe(false);
+  expect(boardViewValues({ loadRemoteImages: true }).loadRemoteImages).toBe(true);
 });

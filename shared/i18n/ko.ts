@@ -1401,5 +1401,9 @@ const catalog: Catalog = {
   "Previous day": "이전 날",
   "Next day": "다음 날",
   "agent {time}": "에이전트 {time}",
+  "Remote images": "원격 이미지",
+  "Load remote images automatically": "원격 이미지 자동 로드",
+  "The image's host sees this computer's address and when you looked. While this is off, a tap loads one image.": "이미지 호스트가 이 컴퓨터의 주소와 본 시각을 알게 됩니다. 꺼져 있는 동안에는 탭하면 이미지 한 장을 불러옵니다.",
+  "Load image": "이미지 불러오기",
 };
 export default catalog;

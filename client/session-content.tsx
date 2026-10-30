@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from "react";
-import { Linking, Platform, ScrollView, Text, View } from "react-native";
+import { Platform, ScrollView, Text, View } from "react-native";
 import { Icon } from "@getpaseo/plugin/client/react-native";
 import {
   parseSessionInline,
@@ -7,6 +7,7 @@ import {
   type MarkdownBlock,
 } from "./session-markdown";
 import { Label, useTheme } from "./ui";
+import { openWebUrl } from "./open-url";
 import { t } from "../shared/i18n";
 
 const mono = Platform.OS === "ios" ? "Menlo" : "monospace";
@@ -46,7 +47,7 @@ const Inline = memo(function Inline({
               onPress={
                 link
                   ? () => {
-                      void Linking.openURL(part.url!).catch(() =>
+                      void openWebUrl(part.url!).catch(() =>
                         setLinkError(true),
                       );
                     }

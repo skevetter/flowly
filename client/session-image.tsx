@@ -4,17 +4,15 @@ import { Icon } from "@getpaseo/plugin/client/react-native";
 import { useRpc } from "@getpaseo/plugin/client";
 import { useQuery } from "@tanstack/react-query";
 import * as rpc from "../shared/rpc";
-import { localImagePath, type ImageRef } from "../shared/images";
+import { imageHost, isRemoteImage, localImagePath, mayRequestImage, type ImageRef } from "../shared/images";
+import { useBoardView } from "./board-view";
 import { Modal } from "./modal";
-import { Label, Theme, font, message, noFocusRing, radius, useTheme } from "./ui";
+import { Button, Label, Theme, font, message, noFocusRing, radius, useTheme } from "./ui";
 import { motionDuration, useMotionValue } from "./motion";
 import { t } from "../shared/i18n";
 
-/**
- * Transcript image. Remote URLs load directly; local paths (pasted images live
- * on the daemon machine) are served by the plugin daemon, scoped to images this
- * session's transcript references. Tap to view larger.
- */
+const approvedSources = new Set<string>();
+
 export function SessionImage({
   taskId,
   agentId,
@@ -39,7 +37,10 @@ export function SessionImage({
     gcTime: 10 * 60_000,
     retry: false,
   });
-  const uri = local ? served.data?.dataUri : image.src;
+  const autoLoadRemote = useBoardView().values?.loadRemoteImages ?? false;
+  const [approved, setApproved] = useState(approvedSources.has(image.src));
+  const withheld = !mayRequestImage(image.src, { autoLoadRemote, approved });
+  const uri = withheld ? undefined : local ? served.data?.dataUri : image.src;
   const [natural, setNatural] = useState(0);
   const [ratio, setRatio] = useState(4 / 3),
     [loaded, setLoaded] = useState(false),
@@ -65,6 +66,20 @@ export function SessionImage({
   }, [uri]);
   const fade = useMotionValue(loaded ? 1 : 0, motionDuration.forward, 0);
   const error = failed || (served.error ? message(served.error) : "");
+  if (withheld && isRemoteImage(image.src))
+    return (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 4 }}>
+        <Button small icon="Image" onPress={() => {
+            approvedSources.add(image.src);
+            setApproved(true);
+          }}>
+          {t("Load image")}
+        </Button>
+        <View style={{ flexShrink: 1 }}>
+          <Label muted size={font.sm} lines={1}>{image.alt ? `${image.alt} (${imageHost(image.src)})` : imageHost(image.src)}</Label>
+        </View>
+      </View>
+    );
   if (error)
     return (
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 }}>
