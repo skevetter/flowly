@@ -266,7 +266,7 @@ Content-Type: application/json
 | `flowly_version`、`node_major`、`os`、`arch` | 同第 4 节 |
 | `paseo_version` | Paseo daemon 的版本号（如 `0.13.0`），取不到时为 `""` |
 
-- `paseo_version`：插件 SDK 不提供宿主版本（`COMPAT(sdk-paseo-version)`），所以用 `server/paseo-version.ts` 开一次短连接（同 `server/local-daemon.ts`，AGENTS.md 的本地连接例外），读 daemon 在连接时发来的 `server_info.version`，只保留符合 `^\d+\.\d+\.\d+(?:[-+.][\w.-]{1,20})?$` 的值。成功后在内存里缓存到 daemon 重启；取不到（连不上、没有凭据、格式不符）时发 `""`，下一条错误再试，不影响上报。bundle 行号取决于 Paseo 的版本（它自带的 esbuild 和包装头），所以还原行号时用这个值作 `--paseo`。
+- `paseo_version`：插件 SDK 不提供宿主版本，且读取 `server_info.version` 需要本地凭据（issue #1 起不再读取），所以恒为 `""`。`telemetry.ts` 保留可选的 `paseoVersion` 依赖，SDK 提供版本后接入。
 - `type`：`error.name`，符合标识符格式（`^[A-Za-z_$][\w$]{0,60}$`）才用，否则为 `Error`；抛出的不是 `Error` 时为 `NonError`。
 - `value`：`error.code` 符合 `^[A-Z][A-Z0-9_]{1,40}$`（如 `ENOENT`、`SQLITE_BUSY`）时为它，否则为 `""`。**从不发送错误消息**：消息里常有路径、标题或命令。
 - `handled`：未捕获异常为 `false`，其余为 `true`。
@@ -284,7 +284,7 @@ Content-Type: application/json
 2. `type`、`value`、`source` 的规则如 11.3 节；非 `Error` 为 `NonError`。
 3. 同一错误同一天只发一次；30 种不同错误只发 20 条；第二天重新开始。
 4. 开关关闭、`DO_NOT_TRACK=1` 时不发；没有 Flowly 自身帧的未捕获异常不发。
-7. `paseo_version`：取到时随事件发出并缓存；第一次取不到时发 `""`，之后再取到就用新值；取值抛错不影响上报（`server/error-report.test.ts`）。
+7. `paseo_version`：目前恒为 `""`；依赖抛错不影响上报（`server/error-report.test.ts`）。
 5. RPC 包装：同步和异步 handler 的程序错误被上报并原样抛出；`ToolError` 只抛出不上报；正常返回值不变。
 6. `properties` 的键集合与 11.3 节完全一致，`distinct_id` 与 `telemetry.json` 的 `installId` 相同；全新安装时同时上报的多个错误使用同一个 `installId`。
 8. Flowly 之外的失败（`DaemonConnectionError`、`LocalDaemonUnavailable`、`SummaryModelError`）经 RPC 包装和 `logFailure` 都不上报，日志照常；其他后台失败照常上报（`server/error-report.test.ts`）。
