@@ -6,8 +6,9 @@ import { BoardService, dataDirectory, migrateLegacyPluginData, paseoHome } from 
 import { readPaseoVersion } from "./server/paseo-version";
 import { NativeDirectoryPicker, detectNativePicker, listDirectories } from "./server/directories";
 import * as rpc from "./shared/rpc";
-import { agentHabitsOn, developerSettings, performanceLogOn, performanceSettings, boardViewSettings, ideasSettings, languageSettings, languageSettingsValues, aiLanguageSettings, aiLanguageSettingsValues, deviceLanguageSettings, deviceLanguageValue, modelSettings, onboardingSettings, ideasSettingsValues, statusSettings, statusSettingsValues, wrapupSettings, wrapupSettingsValues, nativeSessionSettings, nativeSessionSettingsValues, featureSettings, featureSettingsValues, telemetrySettings, telemetrySettingsValues } from "./shared/settings";
+import { agentHabitsOn, agentIntakeSettings, agentIntakeValues, developerSettings, performanceLogOn, performanceSettings, boardViewSettings, ideasSettings, languageSettings, languageSettingsValues, aiLanguageSettings, aiLanguageSettingsValues, deviceLanguageSettings, deviceLanguageValue, modelSettings, onboardingSettings, ideasSettingsValues, statusSettings, statusSettingsValues, wrapupSettings, wrapupSettingsValues, nativeSessionSettings, nativeSessionSettingsValues, featureSettings, featureSettingsValues, telemetrySettings, telemetrySettingsValues } from "./shared/settings";
 import { ToolServer } from "./server/tool-server";
+import { IntakeService } from "./server/intake";
 import { openKanbanSession } from "./server/session-open";
 import { SessionReadStore, SessionReadService, daemonNativeAttention } from "./server/session-reads";
 import { readAttentionCount } from "./server/attention-count";
@@ -308,6 +309,16 @@ export default function contribute(host: PluginServerContext) {
     const state = await ideasPrefs.read().catch(() => null);
     return ideasSettingsValues(state?.status === "ready" ? state.values : {}).artifacts;
   };
+  const intakePrefs = server.registerSettings(agentIntakeSettings);
+  tools.intake = new IntakeService({
+    store,
+    service,
+    connectors,
+    enabled: async () => {
+      const state = await intakePrefs.read().catch(() => null);
+      return agentIntakeValues(state?.status === "ready" ? state.values : {}).enabled;
+    },
+  });
   // Search (SEARCH-SPEC): a scan of the board, the latest summaries and project memory.
   const search = new SearchService({
     board: () => store.read(),

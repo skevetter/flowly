@@ -1,7 +1,11 @@
 import type { PaseoApi } from "@getpaseo/client";
 import type { PluginSessionOpenRequest } from "@getpaseo/plugin/server";
+import { isSummarizer } from "../shared/summary";
 import type { ToolServer } from "./tool-server";
 import { logFailure } from "./error-report";
+
+const intakeServerName = "flowly-intake";
+const providersAcceptingLaunchMcp: readonly string[] = ["claude", "codex"];
 
 /**
  * The `addHook("agent.open.before")` hook: a Kanban-managed interactive
@@ -11,7 +15,7 @@ import { logFailure } from "./error-report";
  */
 export async function openKanbanSession(
   request: PluginSessionOpenRequest,
-  tools: Pick<ToolServer, "attach" | "sessionLaunch">,
+  tools: Pick<ToolServer, "attach" | "sessionLaunch" | "intakeLaunch">,
   directory: string,
   paseo: PaseoApi,
 ): Promise<PluginSessionOpenRequest | void> {
@@ -19,7 +23,7 @@ export async function openKanbanSession(
     tools.attach(paseo);
     if (request.purpose !== "interactive") return;
     const launch = await tools.sessionLaunch(request.agentId, request.workspaceId, paseo);
-    if (!launch) return;
+    if (!launch) return await withIntake(request, tools, paseo);
     return {
       ...request,
       env: {
@@ -34,4 +38,15 @@ export async function openKanbanSession(
   } catch (e) {
     logFailure("Kanban session tools unavailable:", e, request.agentId);
   }
+}
+
+async function withIntake(
+  request: PluginSessionOpenRequest,
+  tools: Pick<ToolServer, "intakeLaunch">,
+  paseo: PaseoApi,
+): Promise<PluginSessionOpenRequest | void> {
+  if (isSummarizer(request) || !providersAcceptingLaunchMcp.includes(request.provider)) return;
+  const intake = await tools.intakeLaunch(request.agentId, request.workspaceId, paseo);
+  if (!intake) return;
+  return { ...request, mcpServers: { ...request.mcpServers, [intakeServerName]: intake } };
 }
