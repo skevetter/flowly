@@ -20,7 +20,7 @@ import { effectiveRepos, sessionContext } from "../shared/scope";
 import { cardImageContextLine } from "./card-images";
 import { setupContextLine, setupMissing } from "../shared/card-setup";
 import { workpadEnabled, workpadOf } from "../shared/workpad";
-import { normalizeTags } from "../shared/tags";
+import { changeTags, normalizeTags } from "../shared/tags";
 import { tagLimits } from "../shared/model";
 import { repoMatcher } from "./repos";
 import { memoryContext } from "./memory";
@@ -601,7 +601,7 @@ export class BoardService {
             status: input.status,
             priority: input.priority,
             ...(input.type ? { type: input.type } : {}),
-            ...(tags.length ? { tags: tags.map((tag) => ({ tag, by: "human" as const, at: now })) } : {}),
+            ...(tags.length ? { tags: changeTags([], { add: tags }, { ...eventAuthor(author), at: now }).tags } : {}),
             position: Math.max(
               -1,
               ...current.tasks

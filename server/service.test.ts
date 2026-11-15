@@ -11,6 +11,7 @@ import {
   taskEdit,
   projectEdit,
 } from "../shared/model";
+import { changeTags } from "../shared/tags";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -363,4 +364,14 @@ test("a card is recorded as created by a person unless the creator is an agent",
   expect(events.find((e) => e.taskId === byPerson.id)).toMatchObject({ actor: "human" });
   expect(events.find((e) => e.taskId === byPerson.id)).not.toHaveProperty("agentId");
   expect(events.find((e) => e.taskId === byAgent.id)).toMatchObject({ actor: "agent", agentId: "talker" });
+});
+
+test("tags of a new card are attributed to its creator in the shape flowly_set_tags stores", async () => {
+  const x = await setup();
+  x.create.mockResolvedValueOnce({ id: "workspace-person" }).mockResolvedValueOnce({ id: "workspace-agent" });
+  const byPerson = await x.service.createTask({ ...x.input, tags: ["ui"] }, x.paseo),
+    byAgent = await x.service.createTask({ ...x.input, operationId: "op-agent", tags: ["intake"] }, x.paseo, { actor: "agent", agentId: "talker" });
+  expect(byPerson.tags).toEqual([{ tag: "ui", by: "human", at: expect.any(String) }]);
+  expect(byAgent.tags).toEqual([{ tag: "intake", by: "agent", agentId: "talker", at: expect.any(String) }]);
+  expect(byAgent.tags![0]).toEqual(changeTags([], { add: ["intake"] }, { actor: "agent", agentId: "talker", at: byAgent.tags![0]!.at }).tags[0]);
 });

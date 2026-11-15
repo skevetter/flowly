@@ -441,3 +441,10 @@ test("start with no items starts the session of the new card", async () => {
   expect(result.session).toEqual({ agentId: `agent-${result.card.id}`, started: true });
   expect(x.startSession).toHaveBeenCalledWith(expect.objectContaining({ taskId: result.card.id, prompt: "Print hello" }), x.paseo);
 });
+
+test("tags given at creation belong to the agent that created the card", async () => {
+  const x = await setup();
+  const result = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello world", tags: ["intake-test"] }, x.paseo);
+  const task = (await cards(x)).find((t) => t.id === result.card.id)!;
+  expect(task.tags).toEqual([{ tag: "intake-test", by: "agent", agentId: "talker", at: expect.any(String) }]);
+});
