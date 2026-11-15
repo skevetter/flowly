@@ -9,6 +9,7 @@ import * as rpc from "./shared/rpc";
 import { agentHabitsOn, agentIntakeSettings, agentIntakeValues, developerSettings, performanceLogOn, performanceSettings, boardViewSettings, ideasSettings, languageSettings, languageSettingsValues, aiLanguageSettings, aiLanguageSettingsValues, deviceLanguageSettings, deviceLanguageValue, modelSettings, modelSettingsValues, onboardingSettings, ideasSettingsValues, statusSettings, statusSettingsValues, wrapupSettings, wrapupSettingsValues, nativeSessionSettings, nativeSessionSettingsValues, featureSettings, featureSettingsValues, telemetrySettings, telemetrySettingsValues } from "./shared/settings";
 import { ToolServer } from "./server/tool-server";
 import { IntakeService } from "./server/intake";
+import { allowOwnCardTool } from "./server/card-tool-permission";
 import { startCardSession } from "./server/card-session-start";
 import { agentModelFromValues } from "./shared/agent-defaults";
 import { openKanbanSession } from "./server/session-open";
@@ -755,6 +756,7 @@ export default function contribute(host: PluginServerContext) {
     tools.attach(paseo);
     const identity = await managedTask(event.agent);
     if (!identity) return;
+    await allowOwnCardTool(paseo, event.agent.id, event.request);
     await store.mutate((board) =>
       // INSIGHTS-REDESIGN-SPEC §7.2: only the tool's name, never its input.
       recordLifecycle(store, board, identity, "agent.permission_requested", undefined, { tool: event.request.name || event.request.kind }),

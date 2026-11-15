@@ -6,6 +6,11 @@
 
 # Implementation progress
 
+## Card sessions run unattended - 2026-11-14
+
+- Flowly answers allow to a permission request only for a managed card session's own `mcp__flowly__<card tool>` calls (`server/card-tool-permission.ts`, spec PASEO-SESSION-TOOLS-SPEC section 8). Intake tools, other servers, shell, edits, questions and plans stay pending. A failed answer is logged and the request stays pending.
+- Onboarding and telemetry: no change.
+
 ## Agent intake (owner request "create Flowly cards from an agent") - 2026-11-14
 
 - Spec written first: [AGENT-INTAKE-SPEC](AGENT-INTAKE-SPEC.md). Branch `feat/agent-card-intake`.

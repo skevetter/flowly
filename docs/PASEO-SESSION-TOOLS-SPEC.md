@@ -128,3 +128,16 @@ hook 抛错或返回冲突会让 session 打不开，这是最高风险：
 - 创建参数与客户端相同，由 `shared/session-start.ts` 共用：`config` 为 `provider/model`、`systemPrompt` 为准备好的指令、可选 `modeId` 与 `thinkingOptionId`；`agentId`、`idempotencyKey`（`ultra-kanban-session:<agentId>`）、`env`（`FLOWLY_CONTEXT_FILE`、`FLOWLY_CLI`、`FLOWLY_SKILL`）；`title` 为卡片标题；`labels` 为 `{ "flowly-task": <taskId> }`；`prompt` 随创建发出，缺省为 `Work on this card.`。
 - 重试：相同 `operationId` 得到相同的准备好的 agentId。创建失败后若该 agent 已在本工作区且未归档，返回它并 `started: false`，不再发送首条提示（与客户端的恢复语义一致）。创建返回的 ID 与准备的不同时报 `SERVICE_FAILURE`。
 - 不做：图片、普通（无工具）会话、对已有会话发消息。
+
+## 8. Auto-approving a card session's own card tools (2026-11-14)
+
+Contract (user-requested): a card session started in a Paseo mode that asks for approval would wait for a person at every `flowly_*` call. Flowly answers `allow` to a permission request when, and only when:
+
+1. the requesting agent is a Flowly-managed card session (`managedTask` in `index.server.ts`: a bound identity whose workspace matches), and
+2. the request has `kind === "tool"` and `name` is exactly `mcp__flowly__<tool>` for one of `cardToolNames` (`shared/card-tools.ts`, the tools `server/tool-server.ts` registers on the card server; a test keeps the two lists equal).
+
+Request fields matched: `AgentPermissionRequest.kind` and `.name` (`node_modules/@getpaseo/protocol/dist/agent-types.d.ts:408-420`). The name is the Claude form; the types carry no other provider's MCP naming, so no other form is matched. The match is exact set membership, so lookalikes (`mcp__flowlyx__...`, `mcp__flowly_evil__...`) and the `flowly-intake` server do not match.
+
+Everything else stays pending for the user: other MCP servers, shell, file edits, questions, plan approval, mode changes. The answer is `agents.ref(id).respondToPermission({ requestId, response: { behavior: "allow" } })` from the existing `agent.permission.before` hook (the renamed `agent.permission_requested` event). A failed answer is logged with `logFailure` and never thrown; the request stays pending. Recording `agent.permission_requested` is unchanged.
+
+Code: `server/card-tool-permission.ts` (`isOwnCardToolRequest`, `allowOwnCardTool`), tests in `server/card-tool-permission.test.ts`.

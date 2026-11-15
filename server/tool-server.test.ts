@@ -7,9 +7,11 @@ import { ToolServer } from "./tool-server";
 import { SearchService } from "./search";
 import { agentFixture } from "./agent-fixture";
 import { skillText } from "./skill-source";
+import { cardToolNames } from "../shared/card-tools";
 import { turnChecklist } from "../shared/turn-checklist";
 import { ideasReminder, movesReminder, outputsReminder } from "./reminders";
 
+const listedNames = (response: { result: { tools: { name: string }[] } }) => response.result.tools.map((t) => t.name);
 const run = promisify(execFile),
   cleanups: (() => Promise<unknown>)[] = [];
 async function setup() {
@@ -94,6 +96,7 @@ test("MCP initialize/list can precede actor creation; live calls require SDK con
     "flowly_suggest_next_moves",
     "flowly_update_workpad",
   ]);
+  expect(listedNames(await mcp("tools/list", {}))).toEqual([...cardToolNames]);
   // flowly_propose_review_rules is gone (GUARDRAILS-SPEC §9).
   // The setup gate and the workpad's own revision are part of the tool schemas (WORKPAD-SPEC §3, CARD-SETUP-SPEC §3.4).
   const listed = (await mcp("tools/list", {})).result.tools as { name: string; description: string; inputSchema: { properties: Record<string, unknown> } }[];
