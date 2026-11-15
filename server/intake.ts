@@ -57,8 +57,16 @@ function connectionFor(item: string, connections: readonly Connection[], connect
 
 function operationIdOf(identity: IntakeIdentity, input: IntakeCreateInput, matches: readonly IntakeCandidate[]) {
   const refs = [...new Set(matches.map((m) => `${m.connection.id}:${m.key}`))].sort();
-  const basis = input.requestId ? [identity.agentId, input.requestId] : [identity.agentId, input.projectId, refs];
+  const basis = [identity.agentId, input.projectId, refs, input.requestId ?? null];
   return intakeOperationPrefix + createHash("sha256").update(JSON.stringify(basis)).digest("hex");
+}
+
+function currentOperation(board: Board, baseOperationId: string) {
+  for (let generation = 0; ; generation++) {
+    const operationId = generation ? `${baseOperationId}:${generation}` : baseOperationId;
+    const task = board.tasks.find((t) => t.operationId === operationId);
+    if (!task || !task.archivedAt) return { operationId, task };
+  }
 }
 
 export class IntakeService {
@@ -108,14 +116,16 @@ export class IntakeService {
   }
 
   createCard(identity: IntakeIdentity, raw: unknown, paseo: PaseoApi): Promise<IntakeCreateResult> {
-    return this.serialized(async () => {
-      await this.assertEnabled();
-      const input = intakeCreateInputSchema.parse(raw);
-      const { task, created } = await this.create(identity, input, paseo);
-      const card = cardOf(task);
-      if (!input.start) return { card, created };
-      return { card, created, session: await this.startSession(task, input.start, paseo) };
-    });
+    return this.createThenStart(identity, raw, paseo);
+  }
+
+  private async createThenStart(identity: IntakeIdentity, raw: unknown, paseo: PaseoApi): Promise<IntakeCreateResult> {
+    await this.assertEnabled();
+    const input = intakeCreateInputSchema.parse(raw);
+    const { task, created } = await this.serialized(() => this.create(identity, input, paseo));
+    const card = cardOf(task);
+    if (!input.start) return { card, created };
+    return { card, created, session: await this.startSession(task, input.start, paseo) };
   }
 
   private async startSession(task: Task, start: IntakeStart, paseo: PaseoApi) {
@@ -143,14 +153,13 @@ export class IntakeService {
       throw new ToolError("INVALID_INPUT", "Worktree mode is not available in this project; use mode directory.");
     const connections = await connectors.list();
     const matches = input.items.map((item) => connectionFor(item, connections, input.connectionId));
-    const operationId = operationIdOf(identity, input, matches);
-    const earlier = board.tasks.find((t) => t.operationId === operationId);
+    const { operationId, task: earlier } = currentOperation(board, operationIdOf(identity, input, matches));
     if (earlier) return { task: earlier, created: false };
+    this.assertWithinRate(board, identity.agentId);
     const resolved = [];
     for (const match of matches) resolved.push(await connectors.resolve(match.connection.id, match.key, match.itemType));
     const duplicate = this.liveCardWithInput(board, project.id, resolved.map((r) => refKey(r.external)));
     if (duplicate) return { task: duplicate, created: false };
-    this.assertWithinRate(board, identity.agentId);
     const task = await service.createTask(
       taskInput.parse({
         projectId: project.id,

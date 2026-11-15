@@ -26,7 +26,7 @@ Turning the setting off applies at once to calls (§6). Sessions already open ke
 - Path `/intake` on the tool server, MCP over HTTP, server name `flowly-intake`.
 - Credential: `ToolSecrets.intakeCredential(identity)` seals `{ agentId, workspaceId }` with purpose `intake` (the purposes `session` and `write` are the card tools'). `workspaceId` is `null` when the session has none.
 - `/intake` accepts only intake credentials. `/mcp` and `/api` accept only card credentials. A token of the other kind fails the signature purpose check and returns HTTP 401 with `UNAUTHORIZED`.
-- Injection: in the `agent.open.before` hook, when `purpose` is `interactive`, `tools.sessionLaunch` returned nothing (not a card session: this includes an unmanaged session in a card's workspace), the session is not a Flowly helper session (`isSummarizer(request)`: summarizer, review and insight sessions), its provider is `claude` or `codex` and the setting is on, add `mcpServers["flowly-intake"] = { type: "http", url, headers: { Authorization: "Bearer <intake token>" } }`. The entry exists at launch only, never in the saved agent config. The hook never throws; a failure is logged and the session opens without the server.
+- Injection: in the `agent.open.before` hook, when `purpose` is `interactive`, `tools.sessionLaunch` returned nothing (not a managed card session), the session is not a Flowly helper session (`isSummarizer(request)`: summarizer, review and insight sessions), its workspace is not bound to any card, archived or not (`ToolServer.intakeLaunch`), its provider is `claude` or `codex` and the setting is on, add `mcpServers["flowly-intake"] = { type: "http", url, headers: { Authorization: "Bearer <intake token>" } }`. The entry exists at launch only, never in the saved agent config. The hook never throws; a failure is logged and the session opens without the server.
 - The provider list exists because Paseo refuses to open a session whose provider takes no MCP servers, and the hook cannot read provider capabilities (PASEO-SESSION-TOOLS-SPEC §4.3). Other providers get no intake server until they are added to `providersAcceptingLaunchMcp` in `server/session-open.ts`.
 - Only the session's own `agentId` is bound. The token never carries a card, and it grants no card tool.
 
@@ -84,11 +84,11 @@ When any item's resolved reference (`refKey`: connection id, item type, key) is 
 
 ### 5.3 Idempotency
 
-The `operationId` is `intake:` plus a SHA-256 digest of `agentId` and `requestId`; without `requestId`, of `agentId`, `projectId` and the sorted `connectionId:key` list. A call whose operation already created a card returns that card with `created: false`, before any item is read. A card archived since keeps its operation: to create a card for the same items again, use a new `requestId`.
+The `operationId` is `intake:` plus a SHA-256 digest of `agentId`, `projectId`, the sorted `connectionId:key` list and `requestId` (null when absent). A call whose operation already has a live card returns that card with `created: false`, before any item is read. When the operation's card is archived, the call uses the next generation (`<operationId>:1`, `:2`, ...) and creates a new card, so archiving a card never blocks the agent from creating it again. A reused `requestId` with other items or another project is another operation.
 
 ### 5.4 Rate guard
 
-At most `intakeLimits.cardsPerHour` (30) cards per `agentId` in a rolling hour, counted from `created` events with actor `agent` and that `agentId`. The 31st call returns `INTAKE_RATE_LIMITED` and creates nothing. A constant, not a setting. Replays and duplicates do not count.
+At most `intakeLimits.cardsPerHour` (30) cards per `agentId` in a rolling hour, counted from `created` events with actor `agent` and that `agentId`. The 31st call returns `INTAKE_RATE_LIMITED` and creates nothing. A constant, not a setting. The check runs before any item is read from a tracker, after the replay lookup, so a limited agent causes no tracker requests and still gets answers for replays of its own operations. Duplicates do not count.
 
 ### 5.5 Attribution
 
@@ -107,7 +107,7 @@ Readers of these fields, checked:
 | drawer and activity (`client/drawer.tsx`, `client/task-artifacts.tsx`) | shown as added by an agent; the activity row names the actor "Agent" because the intake session is not in the card's workspace |
 | telemetry `c_cards_created` | counts every `created` event; `c_user_actions` counts only human actors, so intake cards add no user action |
 | agent habits, progress rules, auto review, insights | key on turn events of the card's own sessions (`agent.turn_started`, `status_changed`, `progress_reported`); the intake session's `created` and `artifact_added` events start no turn and match none of their rules |
-| `dropArtifact` | an agent may remove agent-added artifacts, so the skill tells card agents not to remove inputs that came with the card |
+| `dropArtifact` | an agent may remove agent-added artifacts, but not an external input another session attached (`artifact.agentId` differs): the call fails with `ARTIFACT_FORBIDDEN`; the skill says the same |
 
 ### 5.6 Starting the first session
 
@@ -115,6 +115,7 @@ With `start`, after the card is written (or found, for `created: false`), the to
 
 - Model order: `start.model`, the project's default model, the host default model (Settings, Models). None: `MODEL_REQUIRED`.
 - A card that already has a live session in its workspace gets no new one: the call returns that session's `agentId` with `started: false`. This covers replays and deduped cards.
+- The session start runs outside the creation lock: only the check-and-create step is serialized, so a slow Paseo agent creation never blocks another agent's intake call.
 - The session operation id derives from the card's, so a retried call never starts a second session.
 - Creation and start are two steps. When the start fails, the call still succeeds with `created` as it was and `session: { error: { code, message } }`, so the agent does not retry the creation. Codes: `RESOURCE_UNAVAILABLE`, `ARCHIVED`, `TASK_FINISHED`, `MODEL_REQUIRED`, `SERVICE_FAILURE`.
 - Invalid `start` input (for example a model without `model`) is refused before the card is created.
@@ -154,3 +155,8 @@ Intake sessions do not receive `SKILL.md`, so each tool description states what 
 10. A status that is not a lane, 0 items and 6 items are refused.
 11. Without `start` no session is started. With `start`: the default model is used when `model` is omitted, an explicit model is passed on, `MODEL_REQUIRED` returns the created card with a session error, a replay or a deduped card returns the live session with `started: false` or starts the missing one once.
 12. `npm run typecheck` and `npm test` pass, including the catalog checks.
+
+## 9. Known limits
+
+- Duplicate detection and the New task dialog are not atomic: a card created in the dialog between an intake call's duplicate check and its write can produce two cards for one item.
+- The rate guard counts `created` events, so deleting a card removes its count.

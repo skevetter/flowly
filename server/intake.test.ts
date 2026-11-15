@@ -213,14 +213,30 @@ test("an archived card does not block a new card for the same item", async () =>
   expect(again.card.id).not.toBe(first.card.id);
 });
 
-test("the same request id from the same agent returns the same card, other agents get their own", async () => {
+test("an archived card does not block the same agent from creating a card again", async () => {
+  const x = await setup();
+  const first = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"] }, x.paseo);
+  const archive = (id: string) => x.store.mutate((board) => void (board.tasks.find((t) => t.id === id)!.archivedAt = new Date().toISOString()));
+  await archive(first.card.id);
+  const second = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: {} }, x.paseo);
+  expect(second).toMatchObject({ created: true, session: { started: true } });
+  expect(second.card.id).not.toBe(first.card.id);
+  const replay = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"] }, x.paseo);
+  expect(replay).toEqual({ card: second.card, created: false });
+  await archive(second.card.id);
+  const third = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"] }, x.paseo);
+  expect(third.created).toBe(true);
+  expect([first.card.id, second.card.id]).not.toContain(third.card.id);
+});
+
+test("the same request id with the same project and items returns the same card; other items under it make another card", async () => {
   const x = await setup();
   const first = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], requestId: "r1" }, x.paseo);
-  const replay = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-2"], requestId: "r1" }, x.paseo);
+  const replay = await x.intake.createCard(x.talker, { projectId: "p", items: ["ab-1"], requestId: "r1" }, x.paseo);
   expect(replay).toEqual({ card: first.card, created: false });
-  const other = await x.intake.createCard({ agentId: "other", workspaceId: null }, { projectId: "p", items: ["AB-2"], requestId: "r1" }, x.paseo);
-  expect(other.created).toBe(true);
-  expect(other.card.id).not.toBe(first.card.id);
+  const differentItems = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-2"], requestId: "r1" }, x.paseo);
+  expect(differentItems.created).toBe(true);
+  expect(differentItems.card.id).not.toBe(first.card.id);
 });
 
 test("without a request id the same agent repeating the same items gets the same card", async () => {
@@ -343,4 +359,29 @@ test("an invalid start is refused before anything is created", async () => {
   const x = await setup();
   await expect(x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: { model: { provider: "claude" } } }, x.paseo)).rejects.toThrow();
   expect(await cards(x)).toHaveLength(0);
+});
+
+test("a rate limited agent never reaches the tracker, but a replay of its own operation still answers", async () => {
+  const x = await setup();
+  const first = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], requestId: "r1" }, x.paseo);
+  const resolve = vi.spyOn(x.connectors, "resolve");
+  await x.store.mutate((board) => {
+    for (let n = 0; n < intakeLimits.cardsPerHour; n++)
+      board.events.push({ id: randomUUID(), taskId: `old-${n}`, actor: "agent", agentId: "talker", action: "created", at: new Date().toISOString() });
+  });
+  await expect(x.intake.createCard(x.talker, { projectId: "p", items: ["AB-2"] }, x.paseo)).rejects.toMatchObject({ code: "INTAKE_RATE_LIMITED" });
+  expect(resolve).not.toHaveBeenCalled();
+  expect(await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], requestId: "r1" }, x.paseo)).toEqual({ card: first.card, created: false });
+});
+
+test("a pending session start does not block another agent's card", async () => {
+  const x = await setup();
+  let release: () => void = () => undefined;
+  x.startSession.mockImplementationOnce(() => new Promise((resolve) => (release = () => resolve({ agentId: "slow", started: true }))));
+  const slow = x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: {} }, x.paseo);
+  await vi.waitFor(() => expect(x.startSession).toHaveBeenCalled());
+  const other = await x.intake.createCard({ agentId: "other", workspaceId: null }, { projectId: "p", items: ["AB-2"] }, x.paseo);
+  expect(other.created).toBe(true);
+  release();
+  expect(await slow).toMatchObject({ created: true, session: { agentId: "slow" } });
 });
