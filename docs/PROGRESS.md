@@ -1296,3 +1296,12 @@ Phase 2 spec: [PHASE-02-SPEC.md](PHASE-02-SPEC.md). Three current-card tools; au
 - 改动：外部会话分支改走 `SessionInsightService.turnEnded`（先判断 `isOutsideCandidate` 和开关，再读 timeline）；workflow 钩子改走 `WorkflowInsightsService.turnEnded`（先判断未归档卡片 workspace、workflow insights 开关、非后台 agent；有 `parentAgentId` 的先查标签，summarizer 或已删除则跳过）。NATIVE-SESSION-SPEC §12.2、WORKFLOW-INSIGHTS-SPEC §3.1 已同步。
 - 用户自己在卡片 workspace 里建的子 session（无 summarizer 标签）仍照常采集命令。
 - 测试：`server/session-insights.test.ts`、`server/workflow-insights.test.ts` 各加一条，断言不合格的会话不调用 `timeline.refetch`、合格会话行为不变。
+
+## 2026-11-14 守护进程侧启动卡片首个会话
+
+- 起因：agent 通过 intake 工具建卡后需要可选地启动卡片的首个会话，此前只有网页端能做。规格：`docs/PASEO-SESSION-TOOLS-SPEC.md` §8。
+- [x] `server/card-session-start.ts`：`startCardSession`，复用 `ToolServer.prepareSession`；拒绝已归档卡片（`ARCHIVED`）和 Done/Cancelled（`TASK_FINISHED`）；工作区已有活会话时返回它（`started: false`）；无模型时 `MODEL_REQUIRED`；创建失败后恢复已存在的准备好的 agent，不重发首条提示。
+- [x] `shared/session-start.ts`：`agentSessionConfig` 与 `preparedSessionLaunch`，`client/session-create.tsx` 与服务端共用，创建参数不变。
+- [x] 测试：`server/card-session-start.test.ts` 16 条，`shared/session-start.test.ts` 3 条。`npm run typecheck` 0；`npm test` 1451 通过、6 跳过。
+- [ ] 未跑：真实 Paseo 守护进程端到端；未接入 MCP 工具（由 intake 工具调用）。
+- 引导/提示/What's new/遥测：不加，无用户可见改动。
