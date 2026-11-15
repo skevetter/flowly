@@ -800,3 +800,21 @@ test("intakeLaunch gives nothing when the tool server has no intake service", as
   const x = await setup();
   expect(await x.server.intakeLaunch("talker", null, x.paseo)).toBeNull();
 });
+
+test("intakeLaunch gives nothing to a session in a card's workspace, archived or not", async () => {
+  const x = await intakeSetup();
+  expect(await x.server.intakeLaunch("sub-session", "w", x.paseo)).toBeNull();
+  await x.store.mutate((board) => void (board.tasks[0]!.archivedAt = new Date().toISOString()));
+  expect(await x.server.intakeLaunch("sub-session", "w", x.paseo)).toBeNull();
+  expect(await x.server.intakeLaunch("sub-session", "other-workspace", x.paseo)).not.toBeNull();
+});
+
+test("an intake credential stops working for tool calls the moment the setting is turned off", async () => {
+  const x = await intakeSetup();
+  expect((await x.call("flowly_intake_projects")).isError).toBeUndefined();
+  x.server.intake = intakeStub(false).stub;
+  const refused = await x.call("flowly_intake_projects");
+  expect(JSON.parse(refused.content[0].text).code).toBe("INTAKE_DISABLED");
+  x.server.intake = x.stub;
+  expect((await x.call("flowly_intake_projects")).isError).toBeUndefined();
+});

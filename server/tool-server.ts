@@ -633,6 +633,7 @@ export class ToolServer {
   async intakeLaunch(agentId: string, workspaceId: string | null, paseo: PaseoApi): Promise<LaunchMcp | null> {
     this.attach(paseo);
     if (!this.intake || !(await this.intake.isEnabled())) return null;
+    if (workspaceId && (await this.store.read()).tasks.some((t) => t.workspaceId === workspaceId)) return null;
     await this.start();
     return {
       type: "http",
