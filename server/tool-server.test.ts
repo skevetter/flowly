@@ -702,3 +702,100 @@ test("opting in never interrupts a running turn; a failed reopen leaves the CLI"
   expect(error).toHaveBeenCalledWith("Kanban session reload for MCP failed:", "second", "busy");
   error.mockRestore();
 });
+
+type IntakeStub = NonNullable<ToolServer["intake"]>;
+function intakeStub(enabled = true) {
+  const projects = vi.fn(async () => ({ projects: [] })),
+    createCard = vi.fn(async () => ({ card: { id: "c", title: "T", status: "todo" as const, projectId: "p", workspaceId: "w" }, created: true })),
+    stub: IntakeStub = { isEnabled: async () => enabled, projects, createCard };
+  return { stub, projects, createCard };
+}
+async function intakeSetup(enabled = true) {
+  const x = await setup(),
+    intake = intakeStub(enabled);
+  x.server.intake = intake.stub;
+  const talker = { agentId: "talker", workspaceId: "w-talker" },
+    authorization = "Bearer " + x.server.secrets.intakeCredential(talker);
+  const mcp = async (method: string, params: unknown, token = authorization, path = "intake") => {
+    const response = await fetch(x.url + path, {
+      method: "POST",
+      headers: { Authorization: token, "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+    });
+    const body = await response.text();
+    return { status: response.status, body: response.status === 200 ? JSON.parse(body.split("\n").filter((l) => l.startsWith("data: ")).map((l) => l.slice(6)).at(-1) ?? body) : body };
+  };
+  const call = async (name: string, args: unknown = {}) => (await mcp("tools/call", { name, arguments: args })).body.result;
+  return { ...x, ...intake, talker, authorization, mcp, call };
+}
+
+test("the intake endpoint is its own MCP server with two self-describing tools", async () => {
+  const x = await intakeSetup();
+  const initialized = await x.mcp("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } });
+  expect(initialized.body.result.serverInfo.name).toBe("flowly-intake");
+  const listed = (await x.mcp("tools/list", {})).body.result.tools as { name: string; description: string; inputSchema: { properties: Record<string, unknown>; required?: string[] } }[];
+  expect(listed.map((t) => t.name)).toEqual(["flowly_intake_projects", "flowly_intake_create_card"]);
+  const create = listed.find((t) => t.name === "flowly_intake_create_card")!;
+  expect(create.inputSchema.required).toEqual(["projectId", "items"]);
+  for (const code of ["INTAKE_DISABLED", "INTAKE_NO_CONNECTION", "INTAKE_AMBIGUOUS_CONNECTION", "INTAKE_RATE_LIMITED", "created:false"]) expect(create.description).toContain(code);
+  expect(listed.find((t) => t.name === "flowly_intake_projects")!.description).toContain("flowly_intake_create_card");
+});
+
+test("a card credential is refused on the intake endpoint and an intake credential on the card endpoints", async () => {
+  const x = await intakeSetup();
+  const asCard = await x.mcp("tools/list", {}, x.authorization, "mcp");
+  expect(asCard.status).toBe(401);
+  const cardToken = "Bearer " + x.server.secrets.credential(x.identity);
+  expect((await x.mcp("tools/list", {}, cardToken, "intake")).status).toBe(401);
+  expect((await x.mcp("tools/list", {}, cardToken, "mcp")).status).toBe(200);
+  const api = await fetch(x.url + "api", { method: "POST", headers: { Authorization: x.authorization, "Content-Type": "application/json" }, body: JSON.stringify({ action: "get", input: {} }) });
+  expect(api.status).toBe(401);
+  expect((await x.mcp("tools/list", {}, "Bearer nonsense", "intake")).status).toBe(401);
+  expect((await x.mcp("tools/list", {}, "", "intake")).status).toBe(401);
+});
+
+test("with intake off every tool call is refused with INTAKE_DISABLED and nothing runs", async () => {
+  const x = await intakeSetup(false);
+  x.server.attach(x.paseo);
+  for (const [name, args] of [["flowly_intake_projects", {}], ["flowly_intake_create_card", { projectId: "p", items: ["AB-1"] }]] as const) {
+    const result = await x.call(name, args);
+    expect(result.isError).toBe(true);
+    expect(JSON.parse(result.content[0].text).code).toBe("INTAKE_DISABLED");
+  }
+  expect(x.projects).not.toHaveBeenCalled();
+  expect(x.createCard).not.toHaveBeenCalled();
+});
+
+test("with intake on the tools run as the session that holds the credential", async () => {
+  const x = await intakeSetup();
+  expect((await x.call("flowly_intake_projects")).structuredContent).toEqual({ projects: [] });
+  const cold = await x.call("flowly_intake_create_card", { projectId: "p", items: ["AB-1"] });
+  expect(JSON.parse(cold.content[0].text).code).toBe("PASEO_UNAVAILABLE");
+  x.server.attach(x.paseo);
+  const created = await x.call("flowly_intake_create_card", { projectId: "p", items: ["AB-1"], requestId: "r1" });
+  expect(created.structuredContent).toEqual({ card: { id: "c", title: "T", status: "todo", projectId: "p", workspaceId: "w" }, created: true });
+  expect(x.createCard).toHaveBeenCalledWith(x.talker, { projectId: "p", items: ["AB-1"], requestId: "r1" }, x.paseo);
+});
+
+test("invalid intake input is reported as a tool error and creates nothing", async () => {
+  const x = await intakeSetup();
+  x.server.attach(x.paseo);
+  const result = await x.call("flowly_intake_create_card", { projectId: "p", items: [] });
+  expect(result.isError).toBe(true);
+  expect(x.createCard).not.toHaveBeenCalled();
+});
+
+test("intakeLaunch hands a session an intake server entry only while the setting is on", async () => {
+  const x = await intakeSetup();
+  const launch = await x.server.intakeLaunch("talker", "w-talker", x.paseo);
+  expect(launch).toMatchObject({ type: "http", url: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/intake$/) });
+  expect(x.server.secrets.authenticateIntake(launch!.headers.Authorization.slice("Bearer ".length))).toEqual({ agentId: "talker", workspaceId: "w-talker" });
+  expect((await x.mcp("tools/list", {}, launch!.headers.Authorization)).status).toBe(200);
+  x.server.intake = intakeStub(false).stub;
+  expect(await x.server.intakeLaunch("talker", "w-talker", x.paseo)).toBeNull();
+});
+
+test("intakeLaunch gives nothing when the tool server has no intake service", async () => {
+  const x = await setup();
+  expect(await x.server.intakeLaunch("talker", null, x.paseo)).toBeNull();
+});

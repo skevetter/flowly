@@ -299,7 +299,6 @@ export function modelSettingsValues(values: unknown): ModelSettings {
   return parsed.success ? parsed.data : modelSettings.schema.parse({});
 }
 
-/** Whether interactive sessions that are not cards may create cards (AGENT-INTAKE-SPEC §2). */
 export const agentIntakeSettings = defineSettings({
   id: "agent-intake",
   scope: "host",

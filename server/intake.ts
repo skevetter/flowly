@@ -19,8 +19,11 @@ import { BoardService, resolveWorktreeBaseRef } from "./service";
 import { refKey, type ConnectorService } from "./connectors/service";
 import { ToolError } from "./tool-error";
 
+export const intakeDisabledMessage = "Agent intake is off. The user can turn it on in Flowly settings, AI features, Agent intake.";
 const intakeOperationPrefix = "intake:";
 const defaultStatus = "todo";
+
+export type IntakeTools = Pick<IntakeService, "isEnabled" | "projects" | "createCard">;
 
 export type IntakeDependencies = {
   store: BoardStore;
@@ -63,8 +66,7 @@ export class IntakeService {
   }
 
   private async assertEnabled() {
-    if (!(await this.isEnabled()))
-      throw new ToolError("INTAKE_DISABLED", "Agent intake is off. The user can turn it on in Flowly settings, AI features, Agent intake.");
+    if (!(await this.isEnabled())) throw new ToolError("INTAKE_DISABLED", intakeDisabledMessage);
   }
 
   private serialized<T>(job: () => Promise<T>) {

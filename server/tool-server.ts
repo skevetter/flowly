@@ -46,10 +46,12 @@ import { AgentService } from "./agent-service";
 import { BoardStore } from "./store";
 import { BoardService } from "./service";
 import { ToolSecrets, writePrivate, type ContextMethod } from "./tool-context";
-import { ToolError, toolFailure } from "./tool-error";
+import { ToolError, toolFailure, toolResult } from "./tool-error";
 import { cliSource } from "./cli-source";
 import { skillText, workingInstructions } from "./skill-source";
 import { logFailure } from "./error-report";
+import { createIntakeMcpServer } from "./intake-tools";
+import type { IntakeTools } from "./intake";
 
 /** The launch-only `flowly` MCP server entry handed to the session_open hook. */
 export type LaunchMcp = { type: "http"; url: string; headers: Record<string, string> };
@@ -61,6 +63,9 @@ export class ToolServer {
   readonly agents: AgentService;
   private server?: Server;
   private handler?: McpHttpHandler;
+  private intakeHandler?: McpHttpHandler;
+  private paseo?: PaseoApi;
+  intake?: IntakeTools;
   private starting?: Promise<void>;
   private preparation = Promise.resolve<unknown>(undefined);
   private url = "";
@@ -71,6 +76,7 @@ export class ToolServer {
     this.agents = new AgentService(store, this.secrets);
   }
   attach(paseo: PaseoApi) {
+    this.paseo = paseo;
     this.agents.attach(paseo);
   }
   private async taskIds() {
@@ -125,6 +131,11 @@ export class ToolServer {
       throw new ToolError("UNAUTHORIZED", "Missing Kanban session credential.");
     return this.secrets.authenticate(value.slice(7));
   }
+  private intakeToken(value: string | undefined) {
+    if (!value?.startsWith("Bearer "))
+      throw new ToolError("UNAUTHORIZED", "Missing Kanban intake credential.");
+    return this.secrets.authenticateIntake(value.slice(7));
+  }
   private async initialize() {
     await this.secrets.initialize();
     // Bindings of cards deleted earlier (or before this cleanup existed). An empty board is never trusted for this.
@@ -164,23 +175,7 @@ export class ToolServer {
           `Tool discovery is invalid; preserved at ${discoveryFile}.`,
         );
     }
-    const wrap = async (operation: () => Promise<object>) => {
-      try {
-        const value = await operation();
-        return {
-          content: [{ type: "text" as const, text: JSON.stringify(value) }],
-          structuredContent: value as Record<string, unknown>,
-        };
-      } catch (e) {
-        return {
-          isError: true,
-          content: [
-            { type: "text" as const, text: JSON.stringify(toolFailure(e)) },
-          ],
-          structuredContent: { error: toolFailure(e) },
-        };
-      }
-    };
+    const wrap = toolResult;
     this.handler = createMcpHandler(
       ({ requestInfo }) => {
         const identity = this.token(
@@ -392,6 +387,18 @@ export class ToolServer {
     const nodeHandler = toNodeHandler(this.handler, {
       maxRequestBodySize: maxBody,
     });
+    this.intakeHandler = createMcpHandler(
+      ({ requestInfo }) =>
+        createIntakeMcpServer({
+          identity: this.intakeToken(requestInfo?.headers.get("authorization") || undefined),
+          intake: () => this.intake,
+          paseo: () => this.paseo,
+        }),
+      { responseMode: "json", maxRequestBodySize: maxBody },
+    );
+    const intakeNodeHandler = toNodeHandler(this.intakeHandler, {
+      maxRequestBodySize: maxBody,
+    });
     const host = localhostHostValidation(),
       origin = localhostOriginValidation();
     this.server = createServer((req, res) => {
@@ -403,12 +410,17 @@ export class ToolServer {
             "Tool service is stopping.",
             true,
           );
-        const identity = this.token(
+        const authorization =
           typeof req.headers.authorization === "string"
             ? req.headers.authorization
-            : undefined,
-        );
+            : undefined;
         const pathname = new URL(req.url || "/", "http://127.0.0.1").pathname;
+        if (pathname === "/intake") {
+          this.intakeToken(authorization);
+          await intakeNodeHandler(req, res);
+          return;
+        }
+        const identity = this.token(authorization);
         if (pathname === "/mcp") {
           await nodeHandler(req, res);
           return;
@@ -618,6 +630,16 @@ export class ToolServer {
       contextFile = await this.secrets.writeContext(identity, "cli");
     return { contextFile, mcp: inject ? this.mcpServer(identity) : null };
   }
+  async intakeLaunch(agentId: string, workspaceId: string | null, paseo: PaseoApi): Promise<LaunchMcp | null> {
+    this.attach(paseo);
+    if (!this.intake || !(await this.intake.isEnabled())) return null;
+    await this.start();
+    return {
+      type: "http",
+      url: `${this.url}intake`,
+      headers: { Authorization: `Bearer ${this.secrets.intakeCredential({ agentId, workspaceId })}` },
+    };
+  }
   async accessState(taskId: string, agentId: string, paseo: PaseoApi) {
     this.attach(paseo);
     const task = (await this.store.read()).tasks.find((t) => t.id === taskId),
@@ -668,7 +690,9 @@ export class ToolServer {
       this.server.close(() => resolve());
     });
     await this.handler?.close();
+    await this.intakeHandler?.close();
     this.server = undefined;
     this.handler = undefined;
+    this.intakeHandler = undefined;
   }
 }
