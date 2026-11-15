@@ -32,11 +32,11 @@ export const intakeCreateInputSchema = z.strictObject({
   projectId: z.string().min(1).describe("Project id from flowly_intake_projects."),
   items: z
     .array(z.string().trim().min(1).max(500))
-    .min(1)
     .max(connectorLimits.perCreate)
-    .describe("Tracker items to attach as the card's inputs: item keys (PROJ-12, group/repo#12, group/repo!7) or item URLs."),
+    .optional()
+    .describe("Optional: tracker items to attach as the card's inputs: item keys (PROJ-12, group/repo#12, group/repo!7) or item URLs. Without items a title is required."),
   connectionId: z.string().min(1).optional().describe("Connection id from flowly_intake_projects; use it when an item fits several connections."),
-  title: z.string().trim().min(1).max(200).optional().describe("Card title; default: the first item's title."),
+  title: z.string().trim().min(1).max(200).optional().describe("Card title; required when there are no items, otherwise defaults to the first item's title."),
   description: z.string().max(20000).optional().describe("Card description; default empty."),
   status: statusSchema.optional().describe("Lane to create the card in; default todo. Must be one of the project's statuses."),
   priority: prioritySchema.optional(),
@@ -47,7 +47,7 @@ export const intakeCreateInputSchema = z.strictObject({
   baseRef: z.string().trim().min(1).max(200).optional().describe("Worktree mode only; default: the project's current branch."),
   start: intakeStartSchema.optional().describe("Also start the card's first work session. Omit it to only create the card."),
   requestId: z.string().trim().min(1).max(intakeLimits.requestId).optional().describe("Retry token: the same requestId from the same session returns the card it created."),
-});
+}).refine((input) => !!input.items?.length || !!input.title, { path: ["title"], message: "title is required when there are no items." });
 export type IntakeCreateInput = z.infer<typeof intakeCreateInputSchema>;
 
 const intakeConnectionSchema = z.object({ id: z.string(), provider: connectorProviderSchema, label: z.string() });

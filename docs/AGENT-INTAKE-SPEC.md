@@ -55,9 +55,9 @@ Input (strict):
 | field | type | rule |
 | --- | --- | --- |
 | `projectId` | string | an existing, non-archived project |
-| `items` | string[] | 1 to `connectorLimits.perCreate` (5): item keys (`PROJ-12`, `group/repo#12`, `group/repo!7`) or item URLs |
+| `items` | string[], optional | 0 to `connectorLimits.perCreate` (5): item keys (`PROJ-12`, `group/repo#12`, `group/repo!7`) or item URLs; without items `title` is required |
 | `connectionId` | string, optional | use this connection for every item |
-| `title` | string, optional | 1 to 200 characters; default: the first item's title |
+| `title` | string, optional | 1 to 200 characters; default: the first item's title; required when there are no items (`INVALID_INPUT`, message names `title`) |
 | `description` | string, optional | up to 20000 characters; default empty |
 | `status` | status, optional | default `todo`; must be an enabled lane |
 | `priority`, `type`, `tags` | optional | as in the New task dialog |
@@ -78,13 +78,17 @@ Per item, in order:
 
 Each item is then read from its service before any workspace exists (`ConnectorService.resolve`, the path of the New task dialog); an item that cannot be read refuses the card.
 
+### 5.1.1 Cards without items
+
+With no items (omitted or empty) the call creates a card from `title` and `description` alone: no connection is listed, no tracker is contacted, and there is nothing to match for duplicates. `connectionId` is ignored. The rate guard, status, mode and `start` work as for any card.
+
 ### 5.2 Duplicates
 
 When any item's resolved reference (`refKey`: connection id, item type, key) is already an input artifact of a non-archived card in the same project, nothing is created and that card is returned with `created: false`. Remaining items need a separate call.
 
 ### 5.3 Idempotency
 
-The `operationId` is `intake:` plus a SHA-256 digest of `agentId`, `projectId`, the sorted `connectionId:key` list and `requestId` (null when absent). A call whose operation already has a live card returns that card with `created: false`, before any item is read. When the operation's card is archived, the call uses the next generation (`<operationId>:1`, `:2`, ...) and creates a new card, so archiving a card never blocks the agent from creating it again. A reused `requestId` with other items or another project is another operation.
+The `operationId` is `intake:` plus a SHA-256 digest of `agentId`, `projectId`, the sorted `connectionId:key` list and `requestId` (null when absent); with no items and no `requestId` the basis also holds the normalized title (trimmed, whitespace collapsed, lower case) and the description, so repeating the same card returns it. A call whose operation already has a live card returns that card with `created: false`, before any item is read. When the operation's card is archived, the call uses the next generation (`<operationId>:1`, `:2`, ...) and creates a new card, so archiving a card never blocks the agent from creating it again. A reused `requestId` with other items or another project is another operation.
 
 ### 5.4 Rate guard
 
@@ -152,7 +156,7 @@ Intake sessions do not receive `SKILL.md`, so each tool description states what 
 7. A key two connections can parse returns `INTAKE_AMBIGUOUS_CONNECTION`; `connectionId` resolves it; an unparsable item returns `INTAKE_NO_CONNECTION`.
 8. The same `requestId` from the same agent returns the same card; another agent gets its own.
 9. The 31st creation in an hour returns `INTAKE_RATE_LIMITED`.
-10. A status that is not a lane, 0 items and 6 items are refused.
+10. A status that is not a lane and 6 items are refused. 0 items without a title is refused with `INVALID_INPUT` naming `title`; 0 items with a title creates a card and makes no connector call; the same `requestId`, or the same title and description without one, returns the same card; `start` works the same.
 11. Without `start` no session is started. With `start`: the default model is used when `model` is omitted, an explicit model is passed on, `MODEL_REQUIRED` returns the created card with a session error, a replay or a deduped card returns the live session with `started: false` or starts the missing one once.
 12. `npm run typecheck` and `npm test` pass, including the catalog checks.
 

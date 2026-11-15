@@ -40,6 +40,11 @@ test("a link that needs a title lookup has no key and matches nothing", () => {
 test("items are limited to the connector creation limit and need at least one", () => {
   const base = { projectId: "p" };
   expect(intakeCreateInputSchema.safeParse({ ...base, items: [] }).success).toBe(false);
+  expect(intakeCreateInputSchema.safeParse(base).success).toBe(false);
+  expect(intakeCreateInputSchema.safeParse({ ...base, items: [], title: "Hello world" }).success).toBe(true);
+  expect(intakeCreateInputSchema.safeParse({ ...base, title: "Hello world" }).success).toBe(true);
+  const missingTitle = intakeCreateInputSchema.safeParse(base);
+  expect(!missingTitle.success && missingTitle.error.issues[0]!.path).toEqual(["title"]);
   expect(intakeCreateInputSchema.safeParse({ ...base, items: ["A-1"] }).success).toBe(true);
   const atLimit = Array.from({ length: connectorLimits.perCreate }, (_, i) => `A-${i + 1}`);
   expect(intakeCreateInputSchema.safeParse({ ...base, items: atLimit }).success).toBe(true);

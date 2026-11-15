@@ -736,7 +736,9 @@ test("the intake endpoint is its own MCP server with two self-describing tools",
   const listed = (await x.mcp("tools/list", {})).body.result.tools as { name: string; description: string; inputSchema: { properties: Record<string, unknown>; required?: string[] } }[];
   expect(listed.map((t) => t.name)).toEqual(["flowly_intake_projects", "flowly_intake_create_card"]);
   const create = listed.find((t) => t.name === "flowly_intake_create_card")!;
-  expect(create.inputSchema.required).toEqual(["projectId", "items"]);
+  expect(create.inputSchema.required).toEqual(["projectId"]);
+  expect(create.description).toContain("Items are optional");
+  expect(create.description).toContain("the title is required");
   for (const code of ["INTAKE_DISABLED", "INTAKE_NO_CONNECTION", "INTAKE_AMBIGUOUS_CONNECTION", "INTAKE_RATE_LIMITED", "created:false", "MODEL_REQUIRED", "start.model"]) expect(create.description).toContain(code);
   expect(create.inputSchema.properties).toHaveProperty("start");
   expect(listed.find((t) => t.name === "flowly_intake_projects")!.description).toContain("flowly_intake_create_card");
@@ -783,6 +785,7 @@ test("invalid intake input is reported as a tool error and creates nothing", asy
   x.server.attach(x.paseo);
   const result = await x.call("flowly_intake_create_card", { projectId: "p", items: [] });
   expect(result.isError).toBe(true);
+  expect(result.content[0].text).toContain("title");
   expect(x.createCard).not.toHaveBeenCalled();
 });
 

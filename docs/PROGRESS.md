@@ -11,6 +11,7 @@
 - Spec written first: [AGENT-INTAKE-SPEC](AGENT-INTAKE-SPEC.md). Branch `feat/agent-card-intake`.
 - Host setting `agentIntake.enabled` (default off), Settings, AI features, group Agent intake; second MCP endpoint `/intake` (server `flowly-intake`) with its own sealed credential purpose `intake`; tools `flowly_intake_projects` and `flowly_intake_create_card`; hook injection for interactive sessions that are not card or helper sessions.
 - `BoardService.createTask` takes an author, so intake records actor `agent` with the agent id for the `created` event and the external input artifacts; the dialog stays `human`.
+- `items` is optional when a title is given: a card with no tracker item (for example a hello world card) makes no connector call and skips duplicate matching; idempotency uses the title and description when there is no `requestId`.
 - Optional `start` on `flowly_intake_create_card` starts the card's first session through `startCardSession`; a failed start returns the created card with a session error.
 - Not done: connector project isolation does not exist (every connection serves every project), so `flowly_intake_projects` lists all connections for each project.
 - Onboarding: no tour change or tip (an off-by-default setting for agents, not a headline capability). Telemetry: no new field.

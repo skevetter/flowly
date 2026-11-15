@@ -11,7 +11,7 @@ import { BoardService } from "./service";
 import { ConnectorService } from "./connectors/service";
 import { fakeService, type Route } from "./connectors/fake";
 import { IntakeService, type StartInput } from "./intake";
-import { ToolError } from "./tool-error";
+import { ToolError, toolFailure } from "./tool-error";
 import { intakeLimits } from "../shared/intake";
 import { projectLanes } from "../shared/lanes";
 
@@ -384,4 +384,60 @@ test("a pending session start does not block another agent's card", async () => 
   expect(other.created).toBe(true);
   release();
   expect(await slow).toMatchObject({ created: true, session: { agentId: "slow" } });
+});
+
+test("a card with a title and no items is created without any connector call", async () => {
+  const x = await setup();
+  const resolve = vi.spyOn(x.connectors, "resolve"),
+    list = vi.spyOn(x.connectors, "list");
+  const result = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello world", description: "Say hello" }, x.paseo);
+  expect(result).toMatchObject({ created: true, card: { title: "Hello world", status: "todo", projectId: "p" } });
+  expect(resolve).not.toHaveBeenCalled();
+  expect(list).not.toHaveBeenCalled();
+  const board = await x.store.read();
+  expect(board.artifacts).toEqual([]);
+  expect(board.events.filter((e) => e.taskId === result.card.id)).toEqual([expect.objectContaining({ action: "created", actor: "agent", agentId: "talker" })]);
+});
+
+test("no items and no title is refused naming the title, and nothing is created", async () => {
+  const x = await setup();
+  await expect(x.intake.createCard(x.talker, { projectId: "p" }, x.paseo)).rejects.toThrow(/title/);
+  const failure = await x.intake.createCard(x.talker, { projectId: "p" }, x.paseo).catch((error) => toolFailure(error));
+  expect(failure).toMatchObject({ code: "INVALID_INPUT", message: expect.stringContaining("title") });
+  await expect(x.intake.createCard(x.talker, { projectId: "p", items: [] }, x.paseo)).rejects.toThrow(/title/);
+  expect(await cards(x)).toHaveLength(0);
+});
+
+test("two cards without items and the same title are one card, a different title is another", async () => {
+  const x = await setup();
+  const first = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello world" }, x.paseo);
+  const replay = await x.intake.createCard(x.talker, { projectId: "p", title: "  hello   WORLD " }, x.paseo);
+  expect(replay).toEqual({ card: first.card, created: false });
+  const other = await x.intake.createCard(x.talker, { projectId: "p", title: "Goodbye" }, x.paseo);
+  expect(other.created).toBe(true);
+  const described = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello world", description: "More" }, x.paseo);
+  expect(described.created).toBe(true);
+});
+
+test("the same request id without items returns the same card even when the title changes", async () => {
+  const x = await setup();
+  const first = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello world", requestId: "r1" }, x.paseo);
+  const replay = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello again", requestId: "r1" }, x.paseo);
+  expect(replay).toEqual({ card: first.card, created: false });
+});
+
+test("the rate guard still limits cards without items", async () => {
+  const x = await setup();
+  await x.store.mutate((board) => {
+    for (let n = 0; n < intakeLimits.cardsPerHour; n++)
+      board.events.push({ id: randomUUID(), taskId: `old-${n}`, actor: "agent", agentId: "talker", action: "created", at: new Date().toISOString() });
+  });
+  await expect(x.intake.createCard(x.talker, { projectId: "p", title: "Hello world" }, x.paseo)).rejects.toMatchObject({ code: "INTAKE_RATE_LIMITED" });
+});
+
+test("start with no items starts the session of the new card", async () => {
+  const x = await setup();
+  const result = await x.intake.createCard(x.talker, { projectId: "p", title: "Hello world", start: { prompt: "Print hello" } }, x.paseo);
+  expect(result.session).toEqual({ agentId: `agent-${result.card.id}`, started: true });
+  expect(x.startSession).toHaveBeenCalledWith(expect.objectContaining({ taskId: result.card.id, prompt: "Print hello" }), x.paseo);
 });

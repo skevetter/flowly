@@ -55,9 +55,16 @@ function connectionFor(item: string, connections: readonly Connection[], connect
   );
 }
 
+const normalizedTitle = (title: string) => title.trim().replace(/\s+/g, " ").toLowerCase();
+
+function itemlessTitleBasis(input: IntakeCreateInput, refs: readonly string[]) {
+  if (refs.length || input.requestId) return null;
+  return [normalizedTitle(input.title ?? ""), input.description ?? ""];
+}
+
 function operationIdOf(identity: IntakeIdentity, input: IntakeCreateInput, matches: readonly IntakeCandidate[]) {
   const refs = [...new Set(matches.map((m) => `${m.connection.id}:${m.key}`))].sort();
-  const basis = [identity.agentId, input.projectId, refs, input.requestId ?? null];
+  const basis = [identity.agentId, input.projectId, refs, input.requestId ?? null, itemlessTitleBasis(input, refs)];
   return intakeOperationPrefix + createHash("sha256").update(JSON.stringify(basis)).digest("hex");
 }
 
@@ -151,8 +158,9 @@ export class IntakeService {
     const mode = input.mode ?? "directory";
     if (mode === "worktree" && !(await this.worktreeOf(project)).available)
       throw new ToolError("INVALID_INPUT", "Worktree mode is not available in this project; use mode directory.");
-    const connections = await connectors.list();
-    const matches = input.items.map((item) => connectionFor(item, connections, input.connectionId));
+    const items = input.items ?? [];
+    const connections = items.length ? await connectors.list() : [];
+    const matches = items.map((item) => connectionFor(item, connections, input.connectionId));
     const { operationId, task: earlier } = currentOperation(board, operationIdOf(identity, input, matches));
     if (earlier) return { task: earlier, created: false };
     this.assertWithinRate(board, identity.agentId);
