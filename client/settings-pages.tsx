@@ -6,6 +6,8 @@ import { usePaseo, useRpc, useSettings } from "@getpaseo/plugin/client";
 import { useQuery } from "@tanstack/react-query";
 import { AUTO_MODELS, summaryModelsOf, type SummarySettings, modelLabel, summarySettings, summarySettingsValues } from "../shared/summary";
 import {
+  agentIntakeSettings,
+  agentIntakeValues,
   aiLanguageSettings,
   aiLanguageSettingsValues,
   boardViewSettings,
@@ -400,13 +402,14 @@ export function AiPage() {
   const ideas = useStored(useSettings(ideasSettings), ideasSettingsValues);
   const native = useStored(useSettings(nativeSessionSettings), nativeSessionSettingsValues);
   const features = useStored(useSettings(featureSettings), featureSettingsValues);
+  const intake = useStored(useSettings(agentIntakeSettings), agentIntakeValues);
   const tapOptions = [
     { value: "fill", label: t("Fill the message box") },
     { value: "copy", label: t("Copy") },
   ];
   return (
     <SettingsPage title={t("AI features")}>
-      <Problem text={summary.problem || ideas.problem || native.problem || features.problem} />
+      <Problem text={summary.problem || ideas.problem || native.problem || features.problem || intake.problem} />
       <SettingsGroup
         title={t("Output language")}
       >
@@ -478,6 +481,15 @@ export function AiPage() {
           value={ideas.values?.artifacts ?? true}
           disabled={ideas.busy}
           onChange={(value) => ideas.save({ artifacts: value })}
+        />
+      </SettingsGroup>
+      <SettingsGroup title={t("Agent intake")}>
+        <SettingSwitch
+          title={t("Agents can create cards")}
+          detail={t("On: any Paseo session that is not a card session can create cards from tracker items.")}
+          value={intake.values?.enabled ?? false}
+          disabled={intake.busy}
+          onChange={(enabled) => intake.save({ enabled })}
         />
       </SettingsGroup>
     </SettingsPage>
