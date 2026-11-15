@@ -354,3 +354,13 @@ test("a new card is appended after fractional or reordered positions in its colu
   expect(column).toEqual([second.id, first.id, third.id]);
   expect(third.position).toBeGreaterThan(first.position);
 });
+test("a card is recorded as created by a person unless the creator is an agent", async () => {
+  const x = await setup();
+  x.create.mockResolvedValueOnce({ id: "workspace-person" }).mockResolvedValueOnce({ id: "workspace-agent" });
+  const byPerson = await x.service.createTask(x.input, x.paseo),
+    byAgent = await x.service.createTask({ ...x.input, operationId: "op-agent" }, x.paseo, { actor: "agent", agentId: "talker" });
+  const events = (await x.store.read()).events.filter((e) => e.action === "created");
+  expect(events.find((e) => e.taskId === byPerson.id)).toMatchObject({ actor: "human" });
+  expect(events.find((e) => e.taskId === byPerson.id)).not.toHaveProperty("agentId");
+  expect(events.find((e) => e.taskId === byAgent.id)).toMatchObject({ actor: "agent", agentId: "talker" });
+});

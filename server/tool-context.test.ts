@@ -45,3 +45,18 @@ test("pruneContexts preserves unreadable files", async () => {
   await x.secrets.pruneContexts(new Set(["live"]));
   expect(await readdir(join(x.dir, "sessions"))).toContain("broken.json");
 });
+
+test("an intake credential authenticates only as intake, and a card credential only as a card", async () => {
+  const x = await setup();
+  const intake = x.secrets.intakeCredential({ agentId: "talker", workspaceId: "w9" });
+  expect(x.secrets.authenticateIntake(intake)).toEqual({ agentId: "talker", workspaceId: "w9" });
+  expect(() => x.secrets.authenticate(intake)).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
+  expect(() => x.secrets.authenticateIntake(x.secrets.credential(x.a))).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
+});
+
+test("an intake credential may have no workspace and rejects a tampered signature", async () => {
+  const x = await setup();
+  const intake = x.secrets.intakeCredential({ agentId: "talker", workspaceId: null });
+  expect(x.secrets.authenticateIntake(intake)).toEqual({ agentId: "talker", workspaceId: null });
+  expect(() => x.secrets.authenticateIntake(intake.slice(0, -2) + "xx")).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
+});

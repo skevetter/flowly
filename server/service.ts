@@ -150,6 +150,12 @@ export async function directory(path: string): Promise<string> {
   return canonical;
 }
 
+export type CardAuthor = { actor: "human" } | { actor: "agent"; agentId: string };
+const humanAuthor: CardAuthor = { actor: "human" };
+const eventAuthor = (author: CardAuthor) => (author.actor === "agent" ? { actor: author.actor, agentId: author.agentId } : { actor: author.actor });
+const artifactAuthor = (author: CardAuthor) =>
+  author.actor === "agent" ? { createdBy: "agent" as const, agentId: author.agentId } : { createdBy: "human" as const };
+
 export class BoardService {
   private provision = Promise.resolve<unknown>(undefined);
   /** Reads external items added at creation (EXTERNAL-TRACKER-SPEC §5.4); set by the plugin entry. */
@@ -460,7 +466,7 @@ export class BoardService {
    * the card is written; the two live in different files, so a failed accept
    * leaves the card and the suggestion open (logged).
    */
-  async createTask(input: TaskInput, paseo: PaseoApi) {
+  async createTask(input: TaskInput, paseo: PaseoApi, author: CardAuthor = humanAuthor) {
     const findingId = input.insightFindingId;
     if (findingId) {
       if (!this.insightFindings) throw new Error("Workflow insights are unavailable.");
@@ -468,14 +474,14 @@ export class BoardService {
       const board = await this.store.read();
       if (!board.tasks.some((t) => t.operationId === input.operationId)) await this.insightFindings.check(input.projectId, findingId);
     }
-    const task = await this.createCard(input, paseo);
+    const task = await this.createCard(input, paseo, author);
     if (findingId)
       await this.insightFindings!.accept(input.projectId, findingId, task.id).catch((e) =>
         logFailure("Workflow insights suggestion not marked accepted:", e),
       );
     return task;
   }
-  private createCard(input: TaskInput, paseo: PaseoApi) {
+  private createCard(input: TaskInput, paseo: PaseoApi, author: CardAuthor) {
     return this.serialize(async () => {
       const board = await this.store.read();
       const previous = board.tasks.find(
@@ -616,7 +622,7 @@ export class BoardService {
           current.tasks.push(task);
           this.store.event(current, {
             taskId: task.id,
-            actor: "human",
+            ...eventAuthor(author),
             action: "created",
           });
           // The new card follows up its source (CARD-LINKS-SPEC §3).
@@ -626,7 +632,7 @@ export class BoardService {
             addLink(this.store, current, { kind: "derived", from: task.id, to: input.followUpOf });
           // In the same write, so the first session's context already lists them.
           for (const t of externals)
-            putArtifact(this.store, current, { taskId: task.id, role: "input", kind: "url", target: t.url, title: t.title, createdBy: "human", external: t.external }, now);
+            putArtifact(this.store, current, { taskId: task.id, role: "input", kind: "url", target: t.url, title: t.title, ...artifactAuthor(author), external: t.external }, now);
           if (idea) {
             idea.status = "accepted";
             idea.acceptedTaskId = task.id;

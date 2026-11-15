@@ -13,6 +13,7 @@ import {
   revisionSchema,
   type ToolIdentity,
 } from "../shared/tools";
+import { intakeIdentitySchema, type IntakeIdentity } from "../shared/intake";
 import { ToolError } from "./tool-error";
 
 /**
@@ -104,6 +105,12 @@ export class ToolSecrets {
   }
   authenticate(token: string) {
     return identitySchema.parse(this.unseal("session", token));
+  }
+  intakeCredential(identity: IntakeIdentity) {
+    return this.seal("intake", intakeIdentitySchema.parse(identity));
+  }
+  authenticateIntake(token: string) {
+    return intakeIdentitySchema.parse(this.unseal("intake", token));
   }
   request(identity: ToolIdentity, revision: z.infer<typeof revisionSchema>) {
     const issuedAt = new Date(this.now()).toISOString();

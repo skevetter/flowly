@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { boardViewValues, statusSettingsValues } from "./settings";
+import { agentIntakeValues, boardViewValues, statusSettingsValues } from "./settings";
 
 test("older stored settings get defaults for newer fields; invalid values fall back", () => {
   expect(boardViewValues({ lastProjectId: "p" })).toEqual({ lastProjectId: "p", sendBehavior: "steer", startAgentOnCreate: true, boardSort: "manual", collapsedColumns: [], filterSearch: "", filterPriority: "all", filterType: "all", filterTags: [], showArchived: false, hideFinishedAfterDays: 14, runningSweep: true, lastTicketConnection: "", lastConnections: {}, cardActivity: "auto", cardHidden: [], drawerOrder: [], drawerOpen: {}, drawerWidth: 0, memoryKind: "all", memorySort: "newest", memoryLayout: "list" });
@@ -57,4 +57,11 @@ test("the timing log is off unless the host setting says so", async () => {
   expect(performanceLogOn({})).toBe(false);
   expect(performanceLogOn({ log: "yes" })).toBe(false);
   expect(performanceLogOn({ log: true })).toBe(true);
+});
+
+test("agent intake is off unless stored on; unreadable values stay off", () => {
+  expect(agentIntakeValues(undefined)).toEqual({ enabled: false });
+  expect(agentIntakeValues({})).toEqual({ enabled: false });
+  expect(agentIntakeValues({ enabled: true })).toEqual({ enabled: true });
+  expect(agentIntakeValues({ enabled: "yes" })).toEqual({ enabled: false });
 });

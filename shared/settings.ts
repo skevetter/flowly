@@ -298,3 +298,18 @@ export function modelSettingsValues(values: unknown): ModelSettings {
   const parsed = modelSettings.schema.safeParse(values ?? {});
   return parsed.success ? parsed.data : modelSettings.schema.parse({});
 }
+
+/** Whether interactive sessions that are not cards may create cards (AGENT-INTAKE-SPEC §2). */
+export const agentIntakeSettings = defineSettings({
+  id: "agent-intake",
+  scope: "host",
+  version: 1,
+  schema: z.object({
+    enabled: z.boolean().default(false),
+  }),
+});
+export type AgentIntakeSettings = z.infer<typeof agentIntakeSettings.schema>;
+export function agentIntakeValues(values: unknown): AgentIntakeSettings {
+  const parsed = agentIntakeSettings.schema.safeParse(values ?? {});
+  return parsed.success ? parsed.data : agentIntakeSettings.schema.parse({});
+}
