@@ -70,7 +70,6 @@ function candidateFor(item: string, connection: IntakeCandidate["connection"]): 
   return found && "key" in found ? { connection, itemType: found.itemType, key: found.key } : null;
 }
 
-/** The connections that can read `item`: a link when the connection recognizes it, a bare key when its provider parses it. */
 export function candidateConnections(item: string, connections: readonly IntakeCandidate["connection"][]): IntakeCandidate[] {
   return connections.flatMap((connection) => {
     const candidate = candidateFor(item, connection);

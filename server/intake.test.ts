@@ -83,7 +83,7 @@ async function setup(options: { enabled?: boolean; secondJira?: boolean } = {}) 
     secondJira = options.secondJira ? await connectors.save({ provider: "jira-dc", name: "Other Jira", baseUrl: "https://jira.example.com/other", secret: "other-secret" }) : null;
   const service = new BoardService(store);
   service.connectors = connectors;
-  const create = vi.fn(async (_options: unknown) => ({ id: `workspace-${randomUUID()}` }));
+  const create = vi.fn(async (...request: unknown[]) => ({ id: `workspace-${randomUUID()}` }));
   const paseo = { workspaces: { create, ref: () => ({ refresh: async () => null }) } } as unknown as PaseoApi;
   const flags = { enabled: options.enabled ?? true };
   const intake = new IntakeService({ store, service, connectors, enabled: async () => flags.enabled });
