@@ -118,3 +118,13 @@ hook 抛错或返回冲突会让 session 打不开，这是最高风险：
 ## 7. 后续
 
 - 重新评估路线 A 的条件：Paseo 向插件暴露 Paseo tools 策略，或插件工具可有自己的命名空间、`outputSchema` 与注解。
+
+## 8. 守护进程侧启动卡片首个会话
+
+`server/card-session-start.ts` 的 `startCardSession({ tools, paseo, hostModel }, { taskId, operationId, prompt?, model? })` 返回 `{ agentId, started }`。结果与网页端 New session 一致，供 MCP 工具（如 intake 建卡后启动）调用。
+
+- 顺序：卡片不存在 `RESOURCE_UNAVAILABLE`；卡片或项目已归档 `ARCHIVED`；状态为 Done/Cancelled `TASK_FINISHED`；工作区已有活会话（未归档、非 summarizer）则返回该会话，`started: false`，不再启动；然后解析模型，再调用 `ToolServer.prepareSession`（不重复铸造身份），最后在卡片工作区创建会话。
+- 模型：入参 `model` 优先；否则项目默认模型，再到主机设置 `models`（`agentModelFromValues`，由调用方通过 `hostModel` 提供）；都没有则 `MODEL_REQUIRED`，不创建任何东西。
+- 创建参数与客户端相同，由 `shared/session-start.ts` 共用：`config` 为 `provider/model`、`systemPrompt` 为准备好的指令、可选 `modeId` 与 `thinkingOptionId`；`agentId`、`idempotencyKey`（`ultra-kanban-session:<agentId>`）、`env`（`FLOWLY_CONTEXT_FILE`、`FLOWLY_CLI`、`FLOWLY_SKILL`）；`title` 为卡片标题；`labels` 为 `{ "flowly-task": <taskId> }`；`prompt` 随创建发出，缺省为 `Work on this card.`。
+- 重试：相同 `operationId` 得到相同的准备好的 agentId。创建失败后若该 agent 已在本工作区且未归档，返回它并 `started: false`，不再发送首条提示（与客户端的恢复语义一致）。创建返回的 ID 与准备的不同时报 `SERVICE_FAILURE`。
+- 不做：图片、普通（无工具）会话、对已有会话发消息。

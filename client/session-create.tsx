@@ -7,6 +7,7 @@ import type { Task } from "../shared/model";
 import type { ToolPreparation } from "../shared/tools";
 import * as rpc from "../shared/rpc";
 import { createPreparedSession } from "./session";
+import { agentSessionConfig, preparedSessionLaunch } from "../shared/session-start";
 import { Theme, useTheme, Button, Label, Field, Choices, Notice, Actions, message, font, radius, space } from "./ui";
 import { AgentPicker, useAgentChoice } from "./agent-choice";
 import { Pressable } from "react-native";
@@ -153,23 +154,11 @@ export function SessionCreate({
         setCreationPending(true);
       }
       const options = {
-        config: {
-          provider: `${provider}/${chosen}`,
-          systemPrompt: preparation?.instructions || latestScope.context,
-          ...(chosenMode ? { modeId: chosenMode } : {}),
-          ...(choice.chosenThinking ? { thinkingOptionId: choice.chosenThinking } : {}),
-        },
-        ...(preparation
-          ? {
-              agentId: preparation.agentId,
-              idempotencyKey: `ultra-kanban-session:${preparation.agentId}`,
-              env: {
-                FLOWLY_CONTEXT_FILE: preparation.contextFile,
-                FLOWLY_CLI: preparation.cliPath,
-                FLOWLY_SKILL: preparation.skillPath,
-              },
-            }
-          : { idempotencyKey: attempt.current.operationId }),
+        config: agentSessionConfig(
+          { provider, model: chosen, mode: chosenMode, thinking: choice.chosenThinking },
+          preparation?.instructions || latestScope.context,
+        ),
+        ...(preparation ? preparedSessionLaunch(preparation) : { idempotencyKey: attempt.current.operationId }),
         title: newTitle.trim() || task.title,
         labels: { "flowly-task": task.id },
         prompt: newPrompt.trim(),
