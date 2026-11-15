@@ -12,12 +12,13 @@ import {
   type IntakeCreateResult,
   type IntakeIdentity,
   type IntakeProjectsResult,
+  type IntakeStart,
 } from "../shared/intake";
 import type { Connection } from "../shared/connectors";
 import type { BoardStore } from "./store";
 import { BoardService, resolveWorktreeBaseRef } from "./service";
 import { refKey, type ConnectorService } from "./connectors/service";
-import { ToolError } from "./tool-error";
+import { ToolError, toolFailure } from "./tool-error";
 
 export const intakeDisabledMessage = "Agent intake is off. The user can turn it on in Flowly settings, AI features, Agent intake.";
 const intakeOperationPrefix = "intake:";
@@ -25,7 +26,10 @@ const defaultStatus = "todo";
 
 export type IntakeTools = Pick<IntakeService, "isEnabled" | "projects" | "createCard">;
 
+export type StartInput = { taskId: string; operationId: string; prompt?: string; model?: IntakeStart["model"] };
+
 export type IntakeDependencies = {
+  startSession: (input: StartInput, paseo: PaseoApi) => Promise<{ agentId: string; started: boolean }>;
   store: BoardStore;
   service: BoardService;
   connectors: Pick<ConnectorService, "list" | "resolve">;
@@ -106,11 +110,27 @@ export class IntakeService {
   createCard(identity: IntakeIdentity, raw: unknown, paseo: PaseoApi): Promise<IntakeCreateResult> {
     return this.serialized(async () => {
       await this.assertEnabled();
-      return this.create(identity, intakeCreateInputSchema.parse(raw), paseo);
+      const input = intakeCreateInputSchema.parse(raw);
+      const { task, created } = await this.create(identity, input, paseo);
+      const card = cardOf(task);
+      if (!input.start) return { card, created };
+      return { card, created, session: await this.startSession(task, input.start, paseo) };
     });
   }
 
-  private async create(identity: IntakeIdentity, input: IntakeCreateInput, paseo: PaseoApi): Promise<IntakeCreateResult> {
+  private async startSession(task: Task, start: IntakeStart, paseo: PaseoApi) {
+    try {
+      return await this.dependencies.startSession(
+        { taskId: task.id, operationId: `${task.operationId}:session`, ...(start.prompt ? { prompt: start.prompt } : {}), ...(start.model ? { model: start.model } : {}) },
+        paseo,
+      );
+    } catch (error) {
+      const { code, message } = toolFailure(error);
+      return { error: { code, message } };
+    }
+  }
+
+  private async create(identity: IntakeIdentity, input: IntakeCreateInput, paseo: PaseoApi): Promise<{ task: Task; created: boolean }> {
     const { store, service, connectors } = this.dependencies;
     const board = await store.read();
     const project = board.projects.find((p) => p.id === input.projectId);
@@ -125,11 +145,11 @@ export class IntakeService {
     const matches = input.items.map((item) => connectionFor(item, connections, input.connectionId));
     const operationId = operationIdOf(identity, input, matches);
     const earlier = board.tasks.find((t) => t.operationId === operationId);
-    if (earlier) return { card: cardOf(earlier), created: false };
+    if (earlier) return { task: earlier, created: false };
     const resolved = [];
     for (const match of matches) resolved.push(await connectors.resolve(match.connection.id, match.key, match.itemType));
     const duplicate = this.liveCardWithInput(board, project.id, resolved.map((r) => refKey(r.external)));
-    if (duplicate) return { card: cardOf(duplicate), created: false };
+    if (duplicate) return { task: duplicate, created: false };
     this.assertWithinRate(board, identity.agentId);
     const task = await service.createTask(
       taskInput.parse({
@@ -149,7 +169,7 @@ export class IntakeService {
       paseo,
       { actor: "agent", agentId: identity.agentId },
     );
-    return { card: cardOf(task), created: true };
+    return { task, created: true };
   }
 
   private liveCardWithInput(board: Board, projectId: string, refs: readonly string[]) {

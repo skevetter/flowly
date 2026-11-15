@@ -7,6 +7,7 @@ import {
   type Connection,
   type ItemType,
 } from "./connectors";
+import { agentModelSchema } from "./agent-defaults";
 import { prioritySchema, statusSchema, tagInputList, taskTypeSchema } from "./model";
 
 export const intakeLimits = { cardsPerHour: 30, requestId: 100, hourMs: 60 * 60 * 1000 } as const;
@@ -16,6 +17,14 @@ export const intakeIdentitySchema = z.strictObject({
   workspaceId: z.string().min(1).nullable(),
 });
 export type IntakeIdentity = z.infer<typeof intakeIdentitySchema>;
+
+export const intakeStartLimits = { prompt: 4000 } as const;
+
+export const intakeStartSchema = z.strictObject({
+  prompt: z.string().trim().min(1).max(intakeStartLimits.prompt).optional().describe("First message to the card session; default: a short instruction to work on the card."),
+  model: agentModelSchema.optional().describe("Provider and model for the session; default: the project default model, then the host default model."),
+});
+export type IntakeStart = z.infer<typeof intakeStartSchema>;
 
 export const intakeProjectsInputSchema = z.strictObject({});
 
@@ -36,6 +45,7 @@ export const intakeCreateInputSchema = z.strictObject({
   mode: z.enum(["directory", "worktree"]).optional().describe("directory (default) uses the project root; worktree makes an isolated branch where the project allows it."),
   branchName: z.string().trim().min(1).max(200).optional().describe("Worktree mode only."),
   baseRef: z.string().trim().min(1).max(200).optional().describe("Worktree mode only; default: the project's current branch."),
+  start: intakeStartSchema.optional().describe("Also start the card's first work session. Omit it to only create the card."),
   requestId: z.string().trim().min(1).max(intakeLimits.requestId).optional().describe("Retry token: the same requestId from the same session returns the card it created."),
 });
 export type IntakeCreateInput = z.infer<typeof intakeCreateInputSchema>;
@@ -58,6 +68,12 @@ export type IntakeProjectsResult = z.infer<typeof intakeProjectsResultSchema>;
 export const intakeCreateResultSchema = z.object({
   card: z.object({ id: z.string(), title: z.string(), status: statusSchema, projectId: z.string(), workspaceId: z.string() }),
   created: z.boolean(),
+  session: z
+    .union([
+      z.object({ agentId: z.string(), started: z.boolean() }),
+      z.object({ error: z.object({ code: z.string(), message: z.string() }) }),
+    ])
+    .optional(),
 });
 export type IntakeCreateResult = z.infer<typeof intakeCreateResultSchema>;
 

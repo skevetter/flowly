@@ -9,7 +9,8 @@ Read with [CONNECTORS-SPEC](CONNECTORS-SPEC.md) (connections, item keys), [EXTER
 - A second MCP server, `flowly-intake`, on the existing loopback tool server. Interactive Paseo sessions that are not card sessions get it at launch when the host setting **Agent intake** is on (off by default).
 - Two tools: `flowly_intake_projects` (read-only) and `flowly_intake_create_card`.
 - Card creation goes through the same `BoardService.createTask` the New task dialog uses. There is no second creation path.
-- Out of scope: starting the card's first session (a separate change wires it at the seam in §9), reading or writing tracker items, editing or moving cards, creating projects.
+- Optional: the create tool can also start the card's first work session (§5.6).
+- Out of scope: reading or writing tracker items, editing or moving cards, creating projects.
 - Card agents never create cards. A card session keeps only its card tools and never receives the intake server or an intake credential.
 
 ## 2. Setting
@@ -62,9 +63,10 @@ Input (strict):
 | `priority`, `type`, `tags` | optional | as in the New task dialog |
 | `mode` | `directory` or `worktree`, optional | default `directory`; `worktree` only when `worktree.available` |
 | `branchName`, `baseRef` | string, optional | worktree mode only |
+| `start` | object, optional | `{ prompt?: string (1 to 4000), model?: { provider, model, thinking?, mode? } }`; absent means no session (§5.6) |
 | `requestId` | string, optional | 1 to 100 characters; idempotency (§5.3) |
 
-Output: `{ card: { id, title, status, projectId, workspaceId }, created: boolean }`.
+Output: `{ card: { id, title, status, projectId, workspaceId }, created: boolean, session?: { agentId, started } | { error: { code, message } } }`. `session` is present only when `start` was given.
 
 ### 5.1 Resolving items to connections
 
@@ -107,6 +109,16 @@ Readers of these fields, checked:
 | agent habits, progress rules, auto review, insights | key on turn events of the card's own sessions (`agent.turn_started`, `status_changed`, `progress_reported`); the intake session's `created` and `artifact_added` events start no turn and match none of their rules |
 | `dropArtifact` | an agent may remove agent-added artifacts, so the skill tells card agents not to remove inputs that came with the card |
 
+### 5.6 Starting the first session
+
+With `start`, after the card is written (or found, for `created: false`), the tool calls `startCardSession` (`server/card-session-start.ts`) with the card's id, an operation id of `<card operationId>:session`, the prompt and the model.
+
+- Model order: `start.model`, the project's default model, the host default model (Settings, Models). None: `MODEL_REQUIRED`.
+- A card that already has a live session in its workspace gets no new one: the call returns that session's `agentId` with `started: false`. This covers replays and deduped cards.
+- The session operation id derives from the card's, so a retried call never starts a second session.
+- Creation and start are two steps. When the start fails, the call still succeeds with `created` as it was and `session: { error: { code, message } }`, so the agent does not retry the creation. Codes: `RESOURCE_UNAVAILABLE`, `ARCHIVED`, `TASK_FINISHED`, `MODEL_REQUIRED`, `SERVICE_FAILURE`.
+- Invalid `start` input (for example a model without `model`) is refused before the card is created.
+
 ## 6. Errors
 
 All errors use the tool result shape `{ code, message, retryable }`.
@@ -140,8 +152,5 @@ Intake sessions do not receive `SKILL.md`, so each tool description states what 
 8. The same `requestId` from the same agent returns the same card; another agent gets its own.
 9. The 31st creation in an hour returns `INTAKE_RATE_LIMITED`.
 10. A status that is not a lane, 0 items and 6 items are refused.
-11. `npm run typecheck` and `npm test` pass, including the catalog checks.
-
-## 9. Seam for starting the first session
-
-`IntakeService.createCard` in `server/intake.ts` returns `{ card, created }` after `BoardService.createTask` writes the card. A change that starts the card's first session wires in at that point, for `created: true` only, using `card.id` and `card.workspaceId`. Nothing in this change starts a session.
+11. Without `start` no session is started. With `start`: the default model is used when `model` is omitted, an explicit model is passed on, `MODEL_REQUIRED` returns the created card with a session error, a replay or a deduped card returns the live session with `started: false` or starts the missing one once.
+12. `npm run typecheck` and `npm test` pass, including the catalog checks.

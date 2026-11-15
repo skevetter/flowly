@@ -10,7 +10,8 @@ import { BoardStore } from "./store";
 import { BoardService } from "./service";
 import { ConnectorService } from "./connectors/service";
 import { fakeService, type Route } from "./connectors/fake";
-import { IntakeService } from "./intake";
+import { IntakeService, type StartInput } from "./intake";
+import { ToolError } from "./tool-error";
 import { intakeLimits } from "../shared/intake";
 import { projectLanes } from "../shared/lanes";
 
@@ -86,9 +87,10 @@ async function setup(options: { enabled?: boolean; secondJira?: boolean } = {}) 
   const create = vi.fn(async (...request: unknown[]) => ({ id: `workspace-${randomUUID()}` }));
   const paseo = { workspaces: { create, ref: () => ({ refresh: async () => null }) } } as unknown as PaseoApi;
   const flags = { enabled: options.enabled ?? true };
-  const intake = new IntakeService({ store, service, connectors, enabled: async () => flags.enabled });
+  const startSession = vi.fn(async (input: StartInput) => ({ agentId: `agent-${input.taskId}`, started: true }));
+  const intake = new IntakeService({ store, service, connectors, enabled: async () => flags.enabled, startSession });
   const talker = { agentId: "talker", workspaceId: "w-talker" };
-  return { root, projectRoot, store, service, connectors, jira, gitlab, secondJira, create, paseo, flags, intake, talker };
+  return { startSession, root, projectRoot, store, service, connectors, jira, gitlab, secondJira, create, paseo, flags, intake, talker };
 }
 const cards = async (x: Setup) => (await x.store.read()).tasks;
 
@@ -288,4 +290,57 @@ test("input outside the schema is refused", async () => {
   const x = await setup();
   await expect(x.intake.createCard(x.talker, { projectId: "p", items: [] }, x.paseo)).rejects.toThrow();
   await expect(x.intake.createCard(x.talker, { projectId: "p", items: Array(6).fill("AB-1") }, x.paseo)).rejects.toThrow();
+});
+
+test("without a start field no session is started and the result has no session", async () => {
+  const x = await setup();
+  const result = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"] }, x.paseo);
+  expect(result).not.toHaveProperty("session");
+  expect(x.startSession).not.toHaveBeenCalled();
+});
+
+test("start with no model starts the first session of the new card with the card's own operation", async () => {
+  const x = await setup();
+  const result = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: {} }, x.paseo);
+  expect(result.session).toEqual({ agentId: `agent-${result.card.id}`, started: true });
+  const task = (await cards(x))[0]!;
+  expect(x.startSession).toHaveBeenCalledWith({ taskId: task.id, operationId: `${task.operationId}:session` }, x.paseo);
+});
+
+test("an explicit prompt and model are passed on", async () => {
+  const x = await setup();
+  const model = { provider: "claude", model: "claude-haiku-5-5" };
+  await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: { prompt: "Fix it", model } }, x.paseo);
+  expect(x.startSession).toHaveBeenCalledWith(expect.objectContaining({ prompt: "Fix it", model }), x.paseo);
+});
+
+test("a failed start leaves the created card and reports the session error", async () => {
+  const x = await setup();
+  x.startSession.mockRejectedValueOnce(new ToolError("MODEL_REQUIRED", "Give a model."));
+  const result = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: {} }, x.paseo);
+  expect(result).toMatchObject({ created: true, session: { error: { code: "MODEL_REQUIRED", message: "Give a model." } } });
+  expect(await cards(x)).toHaveLength(1);
+});
+
+test("a replay with start returns the same session without starting another", async () => {
+  const x = await setup();
+  const first = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], requestId: "r1", start: {} }, x.paseo);
+  x.startSession.mockResolvedValueOnce({ agentId: first.session && "agentId" in first.session ? first.session.agentId : "", started: false });
+  const replay = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], requestId: "r1", start: {} }, x.paseo);
+  expect(replay).toMatchObject({ created: false, session: { agentId: `agent-${first.card.id}`, started: false } });
+  expect(x.startSession.mock.calls[1]![0].operationId).toBe(x.startSession.mock.calls[0]![0].operationId);
+});
+
+test("a deduped card gets its missing session started", async () => {
+  const x = await setup();
+  const first = await x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"] }, x.paseo);
+  const again = await x.intake.createCard({ agentId: "another", workspaceId: null }, { projectId: "p", items: ["AB-1"], start: {} }, x.paseo);
+  expect(again).toMatchObject({ created: false, card: first.card, session: { started: true } });
+  expect(x.startSession).toHaveBeenCalledTimes(1);
+});
+
+test("an invalid start is refused before anything is created", async () => {
+  const x = await setup();
+  await expect(x.intake.createCard(x.talker, { projectId: "p", items: ["AB-1"], start: { model: { provider: "claude" } } }, x.paseo)).rejects.toThrow();
+  expect(await cards(x)).toHaveLength(0);
 });

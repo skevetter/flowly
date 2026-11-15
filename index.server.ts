@@ -6,9 +6,11 @@ import { BoardService, dataDirectory, migrateLegacyPluginData, paseoHome } from 
 import { readPaseoVersion } from "./server/paseo-version";
 import { NativeDirectoryPicker, detectNativePicker, listDirectories } from "./server/directories";
 import * as rpc from "./shared/rpc";
-import { agentHabitsOn, agentIntakeSettings, agentIntakeValues, developerSettings, performanceLogOn, performanceSettings, boardViewSettings, ideasSettings, languageSettings, languageSettingsValues, aiLanguageSettings, aiLanguageSettingsValues, deviceLanguageSettings, deviceLanguageValue, modelSettings, onboardingSettings, ideasSettingsValues, statusSettings, statusSettingsValues, wrapupSettings, wrapupSettingsValues, nativeSessionSettings, nativeSessionSettingsValues, featureSettings, featureSettingsValues, telemetrySettings, telemetrySettingsValues } from "./shared/settings";
+import { agentHabitsOn, agentIntakeSettings, agentIntakeValues, developerSettings, performanceLogOn, performanceSettings, boardViewSettings, ideasSettings, languageSettings, languageSettingsValues, aiLanguageSettings, aiLanguageSettingsValues, deviceLanguageSettings, deviceLanguageValue, modelSettings, modelSettingsValues, onboardingSettings, ideasSettingsValues, statusSettings, statusSettingsValues, wrapupSettings, wrapupSettingsValues, nativeSessionSettings, nativeSessionSettingsValues, featureSettings, featureSettingsValues, telemetrySettings, telemetrySettingsValues } from "./shared/settings";
 import { ToolServer } from "./server/tool-server";
 import { IntakeService } from "./server/intake";
+import { startCardSession } from "./server/card-session-start";
+import { agentModelFromValues } from "./shared/agent-defaults";
 import { openKanbanSession } from "./server/session-open";
 import { SessionReadStore, SessionReadService, daemonNativeAttention } from "./server/session-reads";
 import { readAttentionCount } from "./server/attention-count";
@@ -314,6 +316,18 @@ export default function contribute(host: PluginServerContext) {
     store,
     service,
     connectors,
+    startSession: (input, paseo) =>
+      startCardSession(
+        {
+          tools,
+          paseo,
+          hostModel: async () => {
+            const state = await modelPrefs.read().catch(() => null);
+            return agentModelFromValues(state?.status === "ready" ? modelSettingsValues(state.values) : null);
+          },
+        },
+        input,
+      ),
     enabled: async () => {
       const state = await intakePrefs.read().catch(() => null);
       return agentIntakeValues(state?.status === "ready" ? state.values : {}).enabled;

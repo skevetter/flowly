@@ -737,7 +737,8 @@ test("the intake endpoint is its own MCP server with two self-describing tools",
   expect(listed.map((t) => t.name)).toEqual(["flowly_intake_projects", "flowly_intake_create_card"]);
   const create = listed.find((t) => t.name === "flowly_intake_create_card")!;
   expect(create.inputSchema.required).toEqual(["projectId", "items"]);
-  for (const code of ["INTAKE_DISABLED", "INTAKE_NO_CONNECTION", "INTAKE_AMBIGUOUS_CONNECTION", "INTAKE_RATE_LIMITED", "created:false"]) expect(create.description).toContain(code);
+  for (const code of ["INTAKE_DISABLED", "INTAKE_NO_CONNECTION", "INTAKE_AMBIGUOUS_CONNECTION", "INTAKE_RATE_LIMITED", "created:false", "MODEL_REQUIRED", "start.model"]) expect(create.description).toContain(code);
+  expect(create.inputSchema.properties).toHaveProperty("start");
   expect(listed.find((t) => t.name === "flowly_intake_projects")!.description).toContain("flowly_intake_create_card");
 });
 

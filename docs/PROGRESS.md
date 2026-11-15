@@ -11,7 +11,8 @@
 - Spec written first: [AGENT-INTAKE-SPEC](AGENT-INTAKE-SPEC.md). Branch `feat/agent-card-intake`.
 - Host setting `agentIntake.enabled` (default off), Settings, AI features, group Agent intake; second MCP endpoint `/intake` (server `flowly-intake`) with its own sealed credential purpose `intake`; tools `flowly_intake_projects` and `flowly_intake_create_card`; hook injection for interactive sessions that are not card or helper sessions.
 - `BoardService.createTask` takes an author, so intake records actor `agent` with the agent id for the `created` event and the external input artifacts; the dialog stays `human`.
-- Not done: starting the card's first session (separate change, seam in spec section 9); connector project isolation does not exist (every connection serves every project), so `flowly_intake_projects` lists all connections for each project.
+- Optional `start` on `flowly_intake_create_card` starts the card's first session through `startCardSession`; a failed start returns the created card with a session error.
+- Not done: connector project isolation does not exist (every connection serves every project), so `flowly_intake_projects` lists all connections for each project.
 - Onboarding: no tour change or tip (an off-by-default setting for agents, not a headline capability). Telemetry: no new field.
 
 ## Review reasoning selection (card "auto review模型reasoning选择") — 2026-11-14
