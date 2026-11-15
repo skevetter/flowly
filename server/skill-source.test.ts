@@ -13,3 +13,8 @@ test("the installed skill source contains the exact live checklist before detail
   expect(skillText).not.toMatch(/Start of every turn, step \d/);
   expect(await readFile(new URL("../skills/flowly/SKILL.md", import.meta.url), "utf8")).toBe(skillText);
 });
+
+test("the skill treats external inputs an intake session attached as part of the task and keeps them", () => {
+  expect(skillText).toContain("external inputs (Jira, GitHub, GitLab and other connected items) added by another agent session when it created this card, are part of the task");
+  expect(skillText).toContain("never remove an external input that was on the card when you started");
+});

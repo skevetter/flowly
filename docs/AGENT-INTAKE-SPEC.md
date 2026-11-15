@@ -16,7 +16,7 @@ Read with [CONNECTORS-SPEC](CONNECTORS-SPEC.md) (connections, item keys), [EXTER
 
 Host-scoped setting `agent-intake` (`agentIntakeSettings` in `shared/settings.ts`): `{ enabled: boolean }`, default `false`. Unreadable or invalid stored values read as `false`.
 
-UI: Settings, AI features, group **Agent intake**, one switch **Agent intake** with a one-line detail, because the switch has a side effect: any Paseo session can then create cards. Every string is in all nine catalogs.
+UI: Settings, AI features, group **Agent intake**, one switch **Agents can create cards** with a one-line detail, because the switch has a side effect: any Paseo session can then create cards. Every string is in all nine catalogs.
 
 Turning the setting off applies at once to calls (§6). Sessions already open keep the server entry until their next launch, and every call they make is refused with `INTAKE_DISABLED`.
 
@@ -25,7 +25,8 @@ Turning the setting off applies at once to calls (§6). Sessions already open ke
 - Path `/intake` on the tool server, MCP over HTTP, server name `flowly-intake`.
 - Credential: `ToolSecrets.intakeCredential(identity)` seals `{ agentId, workspaceId }` with purpose `intake` (the purposes `session` and `write` are the card tools'). `workspaceId` is `null` when the session has none.
 - `/intake` accepts only intake credentials. `/mcp` and `/api` accept only card credentials. A token of the other kind fails the signature purpose check and returns HTTP 401 with `UNAUTHORIZED`.
-- Injection: in the `agent.open.before` hook, when `purpose` is `interactive`, `tools.sessionLaunch` returned nothing (not a card session), the session is not a Flowly helper session (`isSummarizer(request)`: summarizer, review and insight sessions) and the setting is on, add `mcpServers["flowly-intake"] = { type: "http", url, headers: { Authorization: "Bearer <intake token>" } }`. The entry exists at launch only, never in the saved agent config. The hook never throws; a failure is logged and the session opens without the server.
+- Injection: in the `agent.open.before` hook, when `purpose` is `interactive`, `tools.sessionLaunch` returned nothing (not a card session: this includes an unmanaged session in a card's workspace), the session is not a Flowly helper session (`isSummarizer(request)`: summarizer, review and insight sessions), its provider is `claude` or `codex` and the setting is on, add `mcpServers["flowly-intake"] = { type: "http", url, headers: { Authorization: "Bearer <intake token>" } }`. The entry exists at launch only, never in the saved agent config. The hook never throws; a failure is logged and the session opens without the server.
+- The provider list exists because Paseo refuses to open a session whose provider takes no MCP servers, and the hook cannot read provider capabilities (PASEO-SESSION-TOOLS-SPEC §4.3). Other providers get no intake server until they are added to `providersAcceptingLaunchMcp` in `server/session-open.ts`.
 - Only the session's own `agentId` is bound. The token never carries a card, and it grants no card tool.
 
 ## 4. Tool `flowly_intake_projects`
@@ -130,7 +131,7 @@ Intake sessions do not receive `SKILL.md`, so each tool description states what 
 ## 8. Acceptance criteria
 
 1. Setting off: `flowly_intake_projects` and `flowly_intake_create_card` return `INTAKE_DISABLED`; the hook adds no server.
-2. Setting on: an interactive, non-card, non-helper session gets `flowly-intake`; a card session, a history open and a helper session do not.
+2. Setting on: an interactive, non-card, non-helper session on provider `claude` or `codex` gets `flowly-intake`; a card session, a history open, a helper session and other providers do not.
 3. A card token on `/intake` and an intake token on `/mcp` and `/api` return 401.
 4. `flowly_intake_projects` lists only live projects with enabled lanes, worktree availability and all connections.
 5. Creating with one item makes one card with that input attached, workspace created, `created: true`, actor `agent` on the event and artifact.
