@@ -164,6 +164,8 @@ export function dropArtifact(store: BoardStore, board: Board, id: string, by: { 
   if (!artifact) throw new Error("This artifact no longer exists.");
   liveCard(board, artifact.taskId);
   if (by.createdBy === "agent" && artifact.createdBy === "human") throw new Error("Only the user can remove artifacts they added.");
+  if (by.createdBy === "agent" && artifact.role === "input" && artifact.external && artifact.agentId !== by.agentId)
+    throw new Error("Only the user can remove external inputs another session attached to the card.");
   board.artifacts = board.artifacts.filter((a) => a !== artifact);
   const event = store.event(board, {
     taskId: artifact.taskId,

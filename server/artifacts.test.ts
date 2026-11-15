@@ -215,3 +215,19 @@ test("agent tool result carries the notice and keeps it on replay", async () => 
   const replay = await x.service.write(x.identity, "artifact", { ...input(ctx), role: "output", target: "https://issue.example/1" });
   expect(replay).toMatchObject({ replayed: true, notice: first.notice });
 });
+
+test("a card agent cannot remove an external input another agent attached, but can remove its own", async () => {
+  const x = await setup();
+  const external = { connectionId: "c", provider: "jira-dc" as const, key: "AB-1", remoteId: "1", itemType: "issue" as const };
+  const added = await x.store.mutate((board) => {
+    const intake = putArtifact(x.store, board, { taskId: "t", role: "input", kind: "url", target: "https://jira.example.com/browse/AB-1", createdBy: "agent", agentId: "talker", external });
+    const own = putArtifact(x.store, board, { taskId: "t", role: "input", kind: "url", target: "https://jira.example.com/browse/AB-2", createdBy: "agent", agentId: "actor", external: { ...external, key: "AB-2" } });
+    return { intake: intake.artifact.id, own: own.artifact.id };
+  });
+  let ctx = await x.service.get(x.identity);
+  await expect(x.service.write(x.identity, "artifact_remove", { ...input(ctx), id: added.intake })).rejects.toMatchObject({ code: "ARTIFACT_FORBIDDEN" });
+  expect((await x.store.read()).artifacts.some((a) => a.id === added.intake)).toBe(true);
+  ctx = await x.service.get(x.identity);
+  const removed = await x.service.write(x.identity, "artifact_remove", { ...input(ctx), id: added.own });
+  expect(removed.artifactId).toBe(added.own);
+});
